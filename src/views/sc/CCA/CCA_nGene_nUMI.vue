@@ -3,16 +3,16 @@
     <div class="svgbox">
       <h2>表达基因与UMI数目的对应分布</h2>
       <p>如果一个细胞中发生表达的基因数目较多，那么该细胞的UMI数目也会较大。因此，一般情况下，细胞内发生表达的基因数目与UMI数目呈正相关关系；如果呈负相关关系，提示单细胞转录组测序结果存在问题。另外，基于单细胞表达基因数目与UMI数目的对应分布，也便于对门（Gate）进行设定，过滤掉表达基因数目或UMI数目出现极端值的细胞。</p>
-      <p>下两图分别展示了在D和W两个样本组中，所有细胞基因与UMI数量的相关关系。其中，不同颜色的点分别表示样本组中的不同样本，图上方的数字表示基因与UMI数量之间的相关系数。</p>
+      <p>下两图分别展示了在<span v-for="item in sample">{{item.groupName}}&nbsp;</span>{{sample.length}}个样本组中，所有细胞基因与UMI数量的相关关系。其中，不同颜色的点分别表示样本组中的不同样本，图上方的数字表示基因与UMI数量之间的相关系数。</p>
 
-      <div class="svgContainer" v-for="(item, index) in sample" :key="'sample' + index">
+      <div class="svgContainer" v-for="item in sample">
 
-        <h3>{{index}}样本组基因与UMI数量相关关系</h3>
+        <h3>{{item.groupName}}样本组基因与UMI数量相关关系</h3>
 
-        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['nGene&nUMI', index + 'scatterContainer'])">{{$t('button.svg')}}</el-button>
+        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['nGene&nUMI', item.groupName + 'scatterContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
-        <div :id="index + 'scatterContainer'"></div>
+        <div :id="item.groupName + 'scatterContainer'"></div>
 
       </div>
     </div>
@@ -27,7 +27,7 @@ import * as d3 from 'd3'
 export default {
   data() {
     return {
-      sample: {D: 4, W: 4},
+      sample: [],
       data: [],
     }
   },
@@ -44,14 +44,17 @@ export default {
     initData () {
       this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
-          this.data = res.data.umiMetaDataList
-          Object.keys(this.sample).map(item => this.initScatterPlot(item))
+          this.data = res.data
+          this.sample = res.data.groupName
+          this.$nextTick(() => {
+            this.sample.map(item => this.initScatterPlot(item.groupName, item.sampleList))
+          })
         } else {
           this.$message.error(res.data.message)
         }
       })
     },
-    initScatterPlot (sampleName) {
+    initScatterPlot (sampleName, sampleList) {
       let self = this
       let hassvg = d3.selectAll('#'+ sampleName +'scattersvg')
       if (hassvg) {
@@ -59,10 +62,10 @@ export default {
       }
       var width = 800, height = 500;
       var scattersvg = d3.select("#"+ sampleName +"scatterContainer").append("svg").attr("width", width).attr("height", height).attr("id", sampleName + "scattersvg")
-      var data = this.data
-      var padding = {top: 20, right: 30, bottom: 50, left: 55}
-      var xScale = d3.scaleLinear().domain([d3.min(this.data.map(item => item.nUMI))/1.2, d3.max(this.data.map(item => item.nUMI))*1.2]).range([0,width - padding.left - padding.right]).nice()
-      var yScale = d3.scaleLinear().domain([d3.min(this.data.map(item => item.nGene))/1.2, d3.max(this.data.map(item => item.nGene))*1.2]).range([height - padding.top - padding.bottom,0]).nice()
+      var data = this.data[sampleName]
+      var padding = {top: 20, right: 80, bottom: 50, left: 55}
+      var xScale = d3.scaleLinear().domain([d3.min(data.map(item => item.nUMI))/1.2, d3.max(data.map(item => item.nUMI))*1.2]).range([0,width - padding.left - padding.right]).nice()
+      var yScale = d3.scaleLinear().domain([d3.min(data.map(item => item.nGene))/1.2, d3.max(data.map(item => item.nGene))*1.2]).range([height - padding.top - padding.bottom,0]).nice()
       var xAxis = d3.axisBottom().scale(xScale)
       var yAxis = d3.axisLeft().scale(yScale)
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
@@ -128,12 +131,13 @@ export default {
                     .attr("fill", 'none')
 
       var circle = scattersvg.selectAll("circle")
-                      .data(this.data)
+                      .data(data)
                       .enter()
                       .append("circle")
                       .attr("cx", (d) => padding.left + xScale(d["nUMI"]))
                       .attr("cy", (d) => padding.top + yScale(d["nGene"]))
                       .attr("r", 2.5)
+                      .attr("fill", (d) => colorScale(d.sampleName))
                       .on('mouseover', function (d, i) {
                          tooltipCircle.style('visibility', 'visible').text(d['cellId'] +' ('+ d['nUMI'] + ', ' + d['nGene'] + ')').attr("transform", "translate("+ (padding.left + xScale(d[0]) + 10) +", " + (padding.top + yScale(d[1]) - 5) + ")")
                        })
@@ -202,6 +206,24 @@ export default {
       //  x y 坐标轴导致线条加粗
       scattersvg.selectAll(".domain")
           .style("display", "none");
+
+      // legend
+      let legendMargin = 20
+      let legendGroup = scattersvg.append("g").attr("transform","translate("+ (width - padding.right + 10) +","+ (height / 3) +")")
+      legendGroup.selectAll(".legend")
+                .data(sampleList)
+                .enter()
+                .append("circle")
+                .attr("cx", 5)
+                .attr("cy", (d, i) => i * legendMargin)
+                .attr("r", 5)
+                .attr("fill", (d, i) => colorScale(d))
+        legendGroup.selectAll(".text")
+                  .data(sampleList)
+                  .enter()
+                  .append("text")
+                  .attr("transform",(d,i) => "translate(15,"+ (i * legendMargin + 5) +")")
+                  .text(d => d)
     },
   }
 }

@@ -3,15 +3,15 @@
     <h2>基因与UMI数量分布</h2>
     <p>由于单细胞转录组建库的起始RNA分子量很少，所以测序结果并不能对每个细胞的转录组都有完整覆盖，一般情况下每个细胞会有几百到几千个基因的转录本被检测到，而且细胞之间存在差异。对于一个成功的单细胞转录组建库测序而言，不同细胞被检测到发生表达的基因的数量分布应该是比较宽泛的，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞被检测到发生表达的基因的数量分布进行描绘，可以辅助判断建库测序质量。/测序而言，不同细胞检测到的基因数目应该大体相当。因此，对不同细胞检测到的基因数目分布进行描绘，可以辅助判断测序质量。</p>
     <p>唯一分子识别码（Unique Molecular Identifier，UMI），可以用来对单细胞基因表达进行绝对定量。在对单细胞RNA分子进行PCR扩增之前，每个转录本都会被加上UMI。对于回贴到同一基因的所有读段，只需要计算UMI的数量，就可以对单细胞基因表达进行绝对定量，从而排除PCR扩增对定量的影响。对于一个成功的单细胞转录组建库测序而言，不同细胞的UMI数量总和应该具有比较宽泛的分布，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞检测到的UMI数量总和的分布进行描绘，可以辅助判断建库测序质量。</p>
-    <p>下两图分别展示了在D和W两个样本组中，所有细胞被检测到发生表达的基因数量以及UMI数量总和的分布。</p>
+    <p>下两图分别展示了在 <span v-for="item in sample">{{item.groupName}}&nbsp;</span>{{sample.length}}个样本组中，所有细胞被检测到发生表达的基因数量以及UMI数量总和的分布。</p>
 
-    <div class="svgContainer" v-for="(item, index) in sample" :key="'sample' + index">
-      <h3>{{index}}样本组基因与UMI数量分布</h3>
+    <div class="svgContainer" v-for="item in sample">
+      <h3>{{item.groupName}}样本组基因与UMI数量分布</h3>
       <div class="svgbox">
-        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['geneCounts', index + 'geneContainer'])">{{$t('button.svg')}}</el-button>
+        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['geneCounts', item.groupName + 'geneContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
-        <div :id="index + 'geneContainer'"></div>
+        <div :id="item.groupName + 'geneContainer'"></div>
       </div>
     </div>
 
@@ -24,7 +24,7 @@ import * as d3 from 'd3'
 export default {
   data() {
     return {
-      sample: {D: 4, W: 4},
+      sample: [],
       data: [],
     }
   },
@@ -38,16 +38,18 @@ export default {
       this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
-          let number = Object.keys(this.sample)
-          number.map((sampleName) => {
-            this.initGene(sampleName)
+          this.sample = res.data.groupName
+          this.$nextTick(() => {  //  DOM 都加载后 调用画图
+            this.sample.map((sampleName) => {
+              this.initGene(sampleName.groupName,sampleName.sampleList)
+            })
           })
         } else {
           this.$message.error(res.data.message)
         }
       })
     },
-    initGene (sampleName) {
+    initGene (sampleName, sampleList) {
       let self = this
       let hassvg = d3.selectAll('#'+ sampleName +'geneCountsSvg')._groups[0].length
       if (hassvg) {
@@ -55,7 +57,7 @@ export default {
       }
       let svgWidth = 1200, svgHeight = 500
       let width = 600, height = 500 // 每个 g 标签的宽度/高度
-      let padding = {top:30,right:80,bottom:60,left:80}
+      let padding = {top:30,right:60,bottom:60,left:80}
       let violinsvg = d3.select("#" + sampleName +"geneContainer").append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", sampleName + "geneCountsSvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
       let tooltip = d3.select('#container')
@@ -67,40 +69,36 @@ export default {
         .style('font-size', '12px')
         .style('font-weight', 'bold')
         .text('')
-      let xData = []
-      for (let i = 0;i < this.sample[sampleName];i++) {
-        xData.push(sampleName + (i + 1))
-      }
-        let svg = violinsvg.append("g")
 
-        var yValueArr = this.data.geneCount.map(item => item.count)
+        let svg = violinsvg.append("g")
 
         // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
         var x = d3.scaleBand()
           .range([ padding.left, width - padding.right ])
-          .domain(xData)
+          .domain(sampleList)
           .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
-        svg.append("g")
-          .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
-          .call(d3.axisBottom(x))
+
+          svg.append("g")
+            .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
+            .call(d3.axisBottom(x))
 
         // Build and Show the Y scale
         var y = d3.scaleLinear()
-          .domain(d3.extent(yValueArr))          // Note that here the Y scale is set manually
+          .domain(d3.extent(this.data[sampleName].map(item => item.nGene)))          // Note that here the Y scale is set manually
           .range([height - padding.bottom, padding.top]).nice()
 
-        svg.append("g")
-           .attr("transform", "translate("+ padding.left +",0)")
-           .call(d3.axisLeft(y))
+          svg.append("g")
+             .attr("transform", "translate("+ padding.left +",0)")
+             .call(d3.axisLeft(y))
 
         // 随机散点
         var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
 
         // 每个图 按分组去画 violin plot
-        for (let j = 0;j < xData.length;j++) {
-          var data = this.data.geneCount.filter(item => item.featureType === xData[j])
+        for (let j = 0;j < sampleList.length;j++) {
+          var data = this.data[sampleName].filter(item => item.sampleName === sampleList[j])
 
-          var yData = data.map(item => item.count)
+          var yData = data.map(item => item.nGene)
 
           // Features of the histogram
           var histogram = d3.histogram()
@@ -110,9 +108,9 @@ export default {
           var input, bins,allBins,lengths,longuest
           // Compute the binning for each group of the dataset
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d.featureType;})
+              .key(function(d) { return d.sampleName;})
               .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d.count;})    // Keep the variable called Sepal_Length
+                input = d.map(function(d) { return d.nGene;})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.
                 return(bins)
               })
@@ -149,8 +147,8 @@ export default {
                          .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
             )
 
-          let x0 = Math.ceil(x(xData[j]))
-          let x1 = Math.floor(x(xData[j]) + x.bandwidth())
+          let x0 = Math.ceil(x(sampleList[j]))
+          let x1 = Math.floor(x(sampleList[j]) + x.bandwidth())
 
           let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
 
@@ -159,7 +157,7 @@ export default {
             .enter()
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
-            .attr("cy", (d, i) => y(d['count']))
+            .attr("cy", (d, i) => y(d['nGene']))
             .attr("r", 1.5)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
@@ -181,12 +179,10 @@ export default {
 
    let svgUMI = violinsvg.append("g").attr("transform","translate("+ width +",0)")
 
-        var yValueArr = this.data.umiCount.map(item => item.count)
-
         // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
         var x = d3.scaleBand()
           .range([ padding.left, width - padding.right ])
-          .domain(xData)
+          .domain(sampleList)
           .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
         svgUMI.append("g")
           .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
@@ -194,7 +190,7 @@ export default {
 
         // Build and Show the Y scale
         var y = d3.scaleLinear()
-          .domain(d3.extent(yValueArr))          // Note that here the Y scale is set manually
+          .domain(d3.extent(this.data[sampleName].map(item => item.nUMI)))          // Note that here the Y scale is set manually
           .range([height - padding.bottom, padding.top]).nice()
 
         svgUMI.append("g")
@@ -205,10 +201,10 @@ export default {
         var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
 
         // 每个图 按分组去画 violin plot
-        for (let j = 0;j < xData.length;j++) {
-          var data = this.data.umiCount.filter(item => item.featureType === xData[j])
+        for (let j = 0;j < sampleList.length;j++) {
+          var data = this.data[sampleName].filter(item => item.sampleName === sampleList[j])
 
-          var yData = data.map(item => item.count)
+          var yData = data.map(item => item.nUMI)
 
           // Features of the histogram
           var histogram = d3.histogram()
@@ -218,9 +214,9 @@ export default {
           var input, bins,allBins,lengths,longuest
           // Compute the binning for each group of the dataset
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d.featureType;})
+              .key(function(d) { return d.sampleName;})
               .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d.count;})    // Keep the variable called Sepal_Length
+                input = d.map(function(d) { return d.nUMI;})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.
                 return(bins)
               })
@@ -257,8 +253,8 @@ export default {
                          .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
             )
 
-          let x0 = Math.ceil(x(xData[j]))
-          let x1 = Math.floor(x(xData[j]) + x.bandwidth())
+          let x0 = Math.ceil(x(sampleList[j]))
+          let x1 = Math.floor(x(sampleList[j]) + x.bandwidth())
 
           let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
 
@@ -267,7 +263,7 @@ export default {
             .enter()
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
-            .attr("cy", (d, i) => y(d['count']))
+            .attr("cy", (d, i) => y(d['nUMI']))
             .attr("r", 1.5)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {

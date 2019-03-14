@@ -1,5 +1,5 @@
 <template>
-  <div id="container">
+  <div id="container" v-loading="loading"  element-loading-text="请稍等，数据正在加载中..." element-loading-spinner="el-icon-loading" style="height:100%">
     <h2>典型相关分析散点图</h2>
     <p>如下图所示，横坐标与纵坐标分别表示通过典型相关分析后获得的第一典型相关与第二典型相关，图中每一个点代表一个细胞，不同颜色代表不同的样本组。由下图可知，经过典型相关分析后，来自于不同样本组的细胞在投射空间中出现了一定程度的混合，但是相同样本组之间细胞的分布还是更为接近。这需要通过后续肘形图与热图的分析，选取一定数量具有代表性的典型相关进行相互比对，从而获得使不同样本组之间具有更大相关性的降维结果。</p>
     <el-checkbox-group
@@ -34,17 +34,18 @@ export default {
       pcList: [],
       pcArr: [],
       data: null,
-      radius: 3,
+      radius: 2,
       opacity: 1,
+      loading: false
     }
   },
   components: {
   },
   mounted() {
     //  获取 pc 列表
-    this.axios.get('singel_cell/server/get_cca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+    this.axios.get('singel_cell/server/get_cca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
       if (res.data.message_type === 'success') {
-        this.pcList = res.data.pcNumList.pcNum
+        this.pcList = res.data.analysisNumList.analysisNum
         // 为了拼接 [[x,y,z],...] 数组
         this.pcArr = [this.pcList[0], this.pcList[1]]
         this.getData()
@@ -55,21 +56,30 @@ export default {
   },
   methods: {
     getData() {
-      if (this.pcArr.length < 2) {
-        this.$message.error('请至少选择 2 个PC！')
+      this.loading = true
+      if (this.pcArr.length !== 2) {
+        this.$message.error('请选择 2 个CC！')
         return
       }
-      if (this.pcArr.length > 10) {
-        this.$message('最多选择10个PC，请修改您的选项！')
-        return
-      }
-      this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+      // if (this.pcArr.length < 2) {
+      //   this.$message.error('请至少选择 2 个CC！')
+      //   return
+      // }
+      // if (this.pcArr.length > 10) {
+      //   this.$message('最多选择10个CC，请修改您的选项！')
+      //   return
+      // }
+      this.axios.get('singel_cell/server/get_cca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.initD3()
         } else {
           this.$message.error(res.data.message)
         }
+        this.loading = false
+      }).catch(() => {
+        this.$message.error('请求出错！')
+        this.loading = false
       })
     },
     initD3() {
@@ -84,6 +94,9 @@ export default {
       let self = this
       var initWidth = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
       var initHeight = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
+
+      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+
       // var initWidth = 800 + 40 * this.pcArr.length
       // var initHeight = 800 + 40 * this.pcArr.length
 
@@ -128,13 +141,6 @@ export default {
     					.text(function(){
     						return self.pcArr[0];
     					});
-        // svg.append("text")
-    		// 			.attr("x", width / 2)
-    		// 			.attr("y", -5)
-    		// 			.attr("dy", "-0.3em")
-    		// 			.text(function(){
-    		// 				return "(" + 30 + "%)";
-    		// 			});
         //  y轴文字
         svg.append("text")
     					.attr("x", -60)
@@ -144,17 +150,26 @@ export default {
     					.text(function(){
                 return self.pcArr[1];
     					});
-        // svg.append("text")
-    		// 			.attr("x", -60)
-    		// 			.attr("y", height / 2 + 20)
-        //       .attr("dy", "-0.3em")
-        //       .style('text-anchor', 'start')
-    		// 			.text(function(){
-        //         return "(" + 20 + "%)";
-    		// 			});
+        // legend
+        let legendMargin = 20
+        let legendGroup = svg.append("g").attr("transform","translate("+ (width1 - padding.right - 50) +","+ (height1 / 3) +")")
+        legendGroup.selectAll(".legend")
+                  .data(this.data.sampleGroup)
+                  .enter()
+                  .append("circle")
+                  .attr("cx", 5)
+                  .attr("cy", (d, i) => i * legendMargin)
+                  .attr("r", 5)
+                  .attr("fill", (d, i) => colorScale(d.groupName))
+          legendGroup.selectAll(".text")
+                    .data(this.data.sampleGroup)
+                    .enter()
+                    .append("text")
+                    .attr("transform",(d,i) => "translate(15,"+ (i * legendMargin + 5) +")")
+                    .text(d => d.groupName)
         //x轴比例尺
         var xScale = d3.scaleLinear().range([0, width])
-          .domain([d3.min(self.data[self.pcArr[0]]) -2, d3.max(self.data[self.pcArr[0]]) +2]).nice()
+          .domain([d3.min(self.data[self.pcArr[0]]) , d3.max(self.data[self.pcArr[0]]) ]).nice()
         //定义x轴
         var xAxis = d3.axisBottom(xScale).ticks(3)
         //添加x轴
@@ -166,7 +181,7 @@ export default {
 
         //y轴比例尺
         var yScale = d3.scaleLinear().range([height, 0])
-          .domain([d3.min(self.data[self.pcArr[1]]) -2, d3.max(self.data[self.pcArr[1]]) +2]).nice()
+          .domain([d3.min(self.data[self.pcArr[1]]) , d3.max(self.data[self.pcArr[1]]) ]).nice()
 
         //定义y轴
         var yAxis = d3.axisLeft(yScale).ticks(3)
@@ -221,7 +236,7 @@ export default {
             return yScale(self.data[self.pcArr[1]][i])
           })
           .attr("r", self.radius)
-          .attr("fill", "#f98078")
+          .attr("fill", (d,i) => colorScale(self.data.groupName[i]))
           .style("opacity",self.opacity)
           .on('mouseover', (d, i) => {
             return tooltip.style('visibility', 'visible').text(self.data['cellId'][i])
@@ -242,7 +257,7 @@ export default {
             // var svg = svgG.append('g').attr('transform','translate('+ (j * (width) + (j* 10))  +','+ (i * (height) + (i* 10)) +')')
             //x轴比例尺
             var xScale = d3.scaleLinear().range([0, width])
-              .domain([d3.min(self.data[self.pcArr[j]]) - 2, d3.max(self.data[self.pcArr[j]]) + 2])
+              .domain([d3.min(self.data[self.pcArr[j]]) , d3.max(self.data[self.pcArr[j]]) ])
             //定义x轴
             var xAxis = d3.axisBottom(xScale).ticks(0)
             //添加x轴
@@ -254,7 +269,7 @@ export default {
 
             //y轴比例尺
             var yScale = d3.scaleLinear().range([height, 0])
-              .domain([d3.min(self.data[self.pcArr[i]]) - 2, d3.max(self.data[self.pcArr[i]]) + 2])
+              .domain([d3.min(self.data[self.pcArr[i]]) , d3.max(self.data[self.pcArr[i]]) ])
             //定义y轴
             var yAxis = d3.axisLeft(yScale).ticks(0)
             //添加y轴
@@ -309,7 +324,7 @@ export default {
               .attr("r", function(d) {
                 return self.radius
               })
-              .attr("fill", "#f98078")
+              .attr("fill", (d,i) => colorScale(self.data.groupName[i]))
               .style("opacity", self.opacity)
               .on('mouseover', (d, i) => {
                 return tooltip.style('visibility', 'visible').text(self.data['cellId'][i])

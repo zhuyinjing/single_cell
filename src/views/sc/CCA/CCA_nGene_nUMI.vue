@@ -1,5 +1,5 @@
 <template>
-  <div id="container">
+  <div id="container" v-loading="loading"  element-loading-text="请稍等，数据正在加载中..." element-loading-spinner="el-icon-loading" style="height:100%">
     <div class="svgbox">
       <h2>表达基因与UMI数目的对应分布</h2>
       <p>如果一个细胞中发生表达的基因数目较多，那么该细胞的UMI数目也会较大。因此，一般情况下，细胞内发生表达的基因数目与UMI数目呈正相关关系；如果呈负相关关系，提示单细胞转录组测序结果存在问题。另外，基于单细胞表达基因数目与UMI数目的对应分布，也便于对门（Gate）进行设定，过滤掉表达基因数目或UMI数目出现极端值的细胞。</p>
@@ -29,6 +29,7 @@ export default {
     return {
       sample: [],
       data: [],
+      loading: false
     }
   },
   components: {
@@ -42,6 +43,7 @@ export default {
   },
   methods: {
     initData () {
+      this.loading = true
       this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
@@ -52,6 +54,10 @@ export default {
         } else {
           this.$message.error(res.data.message)
         }
+        this.loading = false
+      }).catch(() => {
+        this.$message.error('请求出错！')
+        this.loading = false
       })
     },
     initScatterPlot (sampleName, sampleList) {

@@ -1,5 +1,5 @@
 <template>
-  <div id="container">
+  <div id="container" v-loading="loading"  element-loading-text="请稍等，数据正在加载中..." element-loading-spinner="el-icon-loading" style="height:100%">
     <h2>基因与UMI数量分布</h2>
     <p>由于单细胞转录组建库的起始RNA分子量很少，所以测序结果并不能对每个细胞的转录组都有完整覆盖，一般情况下每个细胞会有几百到几千个基因的转录本被检测到，而且细胞之间存在差异。对于一个成功的单细胞转录组建库测序而言，不同细胞被检测到发生表达的基因的数量分布应该是比较宽泛的，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞被检测到发生表达的基因的数量分布进行描绘，可以辅助判断建库测序质量。/测序而言，不同细胞检测到的基因数目应该大体相当。因此，对不同细胞检测到的基因数目分布进行描绘，可以辅助判断测序质量。</p>
     <p>唯一分子识别码（Unique Molecular Identifier，UMI），可以用来对单细胞基因表达进行绝对定量。在对单细胞RNA分子进行PCR扩增之前，每个转录本都会被加上UMI。对于回贴到同一基因的所有读段，只需要计算UMI的数量，就可以对单细胞基因表达进行绝对定量，从而排除PCR扩增对定量的影响。对于一个成功的单细胞转录组建库测序而言，不同细胞的UMI数量总和应该具有比较宽泛的分布，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞检测到的UMI数量总和的分布进行描绘，可以辅助判断建库测序质量。</p>
@@ -26,6 +26,7 @@ export default {
     return {
       sample: [],
       data: [],
+      loading: false
     }
   },
   components: {
@@ -35,6 +36,7 @@ export default {
   },
   methods: {
     initData () {
+      this.loading = true
       this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
@@ -47,6 +49,10 @@ export default {
         } else {
           this.$message.error(res.data.message)
         }
+        this.loading = false
+      }).catch(() => {
+        this.$message.error('请求出错！')
+        this.loading = false
       })
     },
     initGene (sampleName, sampleList) {

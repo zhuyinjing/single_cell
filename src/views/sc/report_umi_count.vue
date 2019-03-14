@@ -93,14 +93,14 @@ export default {
         // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
         var x = d3.scaleBand()
           .range([ 0, width ])
-          .domain([this.data[0].origIdent])
+          .domain([this.data[0].sampleGroup])
           .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
 
         var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
 
 
-        let x0 = Math.ceil(x(this.data[0].origIdent))
-        let x1 = Math.floor(x(this.data[0].origIdent) + x.bandwidth())
+        let x0 = Math.ceil(x(this.data[0].sampleGroup))
+        let x1 = Math.floor(x(this.data[0].sampleGroup) + x.bandwidth())
 
         var xData = d3.range(sampleData.length).map(d => d3.randomUniform(x0, x1)())
 
@@ -115,7 +115,7 @@ export default {
         var input, bins,allBins,lengths,longuest
         // Compute the binning for each group of the dataset
         var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-            .key(function(d) { return d.origIdent;})
+            .key(function(d) { return d.sampleGroup;})
             .rollup(function(d) {   // For each key..
               input = d.map(function(g) { return g.nGene;})    // Keep the variable called Sepal_Length
               bins = histogram(input)   // And compute the binning on it.
@@ -221,14 +221,14 @@ export default {
         // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
         var x = d3.scaleBand()
           .range([ 0, width ])
-          .domain([this.data[0].origIdent])
+          .domain([this.data[0].sampleGroup])
           .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
 
         var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
 
 
-        let x0 = Math.ceil(x(this.data[0].origIdent))
-        let x1 = Math.floor(x(this.data[0].origIdent) + x.bandwidth())
+        let x0 = Math.ceil(x(this.data[0].sampleGroup))
+        let x1 = Math.floor(x(this.data[0].sampleGroup) + x.bandwidth())
 
         var xData = d3.range(sampleData.length).map(d => d3.randomUniform(x0, x1)())
 
@@ -243,7 +243,7 @@ export default {
         var input, bins,allBins,lengths,longuest
         // Compute the binning for each group of the dataset
         var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-            .key(function(d) { return d.origIdent;})
+            .key(function(d) { return d.sampleGroup;})
             .rollup(function(d) {   // For each key..
               input = d.map(function(g) { return g.nUMI;})    // Keep the variable called Sepal_Length
               bins = histogram(input)   // And compute the binning on it.

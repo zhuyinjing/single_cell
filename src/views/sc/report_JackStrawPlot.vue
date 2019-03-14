@@ -39,7 +39,7 @@ export default {
   mounted() {
     this.axios.get('singel_cell/server/get_jack_straw_plot?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
       if (res.data.message_type === 'success') {
-        this.pcList = res.data.pcNumList.pcNum
+        this.pcList = res.data.analysisNumList.analysisNum
         this.pcArr = this.pcList.slice(0,6)
         this.getData()
       } else {

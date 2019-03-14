@@ -37,7 +37,7 @@ export default {
   mounted() {
     this.axios.get('singel_cell/server/get_pca_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username).then((res) => {
       if (res.data.message_type === 'success') {
-        this.pcList = res.data.pcNumList.pcNum
+        this.pcList = res.data.pcNumList.analysisNum
         this.pcArr = this.pcList.slice(0,9)
         this.getData()
       } else {

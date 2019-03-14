@@ -42,7 +42,7 @@ export default {
   },
   mounted() {
     //  获取 pc 列表
-    this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+    this.axios.get('singel_cell/server/get_cca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
       if (res.data.message_type === 'success') {
         this.pcList = res.data.pcNumList.pcNum
         // 为了拼接 [[x,y,z],...] 数组

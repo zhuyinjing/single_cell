@@ -2,13 +2,12 @@
 <div>
   <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
     <el-menu-item index="home">{{$t('navbar.home')}}</el-menu-item>
-    <el-menu-item index="sc">单细胞</el-menu-item>
     <el-menu-item index="project" v-if="$store.state.role !== 'admin'">{{$t('navbar.project_list')}}</el-menu-item>
     <el-menu-item index="admin_project_list" v-if="$store.state.role === 'admin'">{{$t('navbar.project_list')}}</el-menu-item>
-    <el-menu-item index="app_heatmap_input">{{$t('navbar.app_tool')}}</el-menu-item>
+    <!-- <el-menu-item index="app_heatmap_input">{{$t('navbar.app_tool')}}</el-menu-item> -->
   </el-menu>
   <div class="userDiv" v-show="$store.state.username">
-    <el-dropdown trigger="click" @command="changeLocale">
+    <!-- <el-dropdown trigger="click" @command="changeLocale">
       <span class="el-dropdown-link">
         {{language}}<i class="el-icon-arrow-down el-icon--right"></i>
       </span>
@@ -16,7 +15,7 @@
         <el-dropdown-item command="中文">中文</el-dropdown-item>
         <el-dropdown-item command="English">English</el-dropdown-item>
       </el-dropdown-menu>
-    </el-dropdown>&nbsp;&nbsp;
+    </el-dropdown>&nbsp;&nbsp; -->
     <span class="nameStyle">{{$store.state.username}}</span>
     <el-button type="text" @click="logout">{{$t('navbar.logout')}}</el-button>
   </div>
@@ -66,14 +65,6 @@ export default {
           sessionStorage.setItem('navbarItem', 'home')
           this.$router.push({
             'path': '/'
-          })
-          break
-        case 'sc':
-          this.activeIndex = 'sc'
-          sessionStorage.setItem('navbarItem', 'sc')
-          this.$store.commit('setprojectId',11)
-          this.$router.push({
-            'path': '/sc'
           })
           break
         case 'project':

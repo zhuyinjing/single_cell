@@ -48,7 +48,7 @@ export default {
       var scattersvg = d3.select("#d3container").append("svg").attr("width", width).attr("height", height).attr("id", "scattersvg")
       var data = this.data
       var padding = {top:30,right:30,bottom:60,left:60}
-      var xScale = d3.scaleLinear().domain([0, this.data.length]).range([0,width - padding.left - padding.right])
+      var xScale = d3.scaleLinear().domain([0, 20]).range([0,width - padding.left - padding.right])
       var yScale = d3.scaleLinear().domain([d3.min(data.map(item => item["standardDeviation"])) - 2, d3.max(data.map(item => item["standardDeviation"])) + 2]).range([height - padding.top - padding.bottom,0]).nice()
       var xAxis = d3.axisBottom().scale(xScale)
       var yAxis = d3.axisLeft().scale(yScale)

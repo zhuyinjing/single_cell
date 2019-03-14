@@ -154,19 +154,34 @@ export default {
                 }, {
                     "mDataProp" : "id",
                     "mRender" : function(data, type, full) {
-                        return '<button id="experimentBtn" value="'+ data + '" class="el-button el-button--danger el-button--mini" @click="createExperiment()">实验设计</button>' + '<button id="reportBtn" class="el-button el-button--primary el-button--mini">查看报告</button>'
+                        let experimentBtn = '<button id="experimentBtn" class="el-button el-button--danger el-button--small" @click="createExperiment()">实验设计</button>'
+                        let taskBtn = '<button id="taskBtn" class="el-button el-button--warning el-button--small" @click="runTask()">运行分析</button>'
+                        let reportBtn = '<button id="reportBtn" class="el-button el-button--primary el-button--small">查看报告</button>'
+                        return experimentBtn + taskBtn + reportBtn
                     }
                 }
               ],
             }
           );
-
           $('#table tbody').on( 'click', '#experimentBtn', function () {
             var row = $(this).parents('tr')[0]
             var data = $("#table").dataTable().fnGetData(row)
             self.commitStore(data)
             self.$router.push('/admin_create_experiment')
           })
+          $('#table tbody').on( 'click', '#taskBtn', function () {
+            var row = $(this).parents('tr')[0]
+            var data = $("#table").dataTable().fnGetData(row)
+            self.commitStore(data)
+            self.$router.push('/run_task')
+          })
+          $('#table tbody').on( 'click', '#reportBtn', function () {
+            var row = $(this).parents('tr')[0]
+            var data = $("#table").dataTable().fnGetData(row)
+            self.commitStore(data)
+            self.$router.push('/sc')
+          })
+
         })
       },
     commitStore (item) {

@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     initData () {
-      this.axios.get('/singel_cell/server/get_singel_cell_count_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
+      this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           let number = Object.keys(this.sample)

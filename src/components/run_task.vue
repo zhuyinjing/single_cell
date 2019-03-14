@@ -35,7 +35,7 @@ export default {
     return {
       runBtnShow: false,
       refreshBtnShow: false,
-      reportBtnShow: false,
+      reportBtnShow: true,
       currentStepSn: null,
       status: null,
       timer: null,
@@ -47,7 +47,7 @@ export default {
   components: {
   },
   mounted () {
-    this.selectTask()
+    // this.selectTask()
   },
   destroyed () {
     window.clearInterval(this.timer)
@@ -286,7 +286,7 @@ export default {
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.7)'
       })
-      this.axios.get('/server/create_report?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId).then((res) => {
+      this.axios.get('/singel_cell/create_report?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId).then((res) => {
         if (res.data.message_type === 'success') {
           this.getReportStatus()
         } else {
@@ -313,7 +313,7 @@ export default {
 
     },
     backProjectList () {
-      this.$router.push({'name': 'project_list'})
+      this.$router.back(-1)
     }
   }
 }

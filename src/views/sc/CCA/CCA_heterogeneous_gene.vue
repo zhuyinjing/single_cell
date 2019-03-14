@@ -34,6 +34,18 @@
 
     </div>
 
+    <!-- <el-carousel style="width:900px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="change">
+      <el-carousel-item >
+        <div id="d3container"></div>
+      </el-carousel-item>
+      <el-carousel-item >
+      2
+      </el-carousel-item>
+      <el-carousel-item >
+      3
+      </el-carousel-item>
+    </el-carousel> -->
+
     <div class="clear"></div>
   </div>
 </template>

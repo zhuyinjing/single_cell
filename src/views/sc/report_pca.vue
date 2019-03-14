@@ -42,9 +42,9 @@ export default {
   },
   mounted() {
     //  获取 pc 列表
-    this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+    this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
       if (res.data.message_type === 'success') {
-        this.pcList = res.data.pcNumList.pcNum
+        this.pcList = res.data.analysisNumList.analysisNum
         // 为了拼接 [[x,y,z],...] 数组
         this.pcArr = [this.pcList[0], this.pcList[1]]
         this.getData()
@@ -63,7 +63,7 @@ export default {
         this.$message('最多选择10个PC，请修改您的选项！')
         return
       }
-      this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+      this.axios.get('singel_cell/server/get_pca_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.initD3()

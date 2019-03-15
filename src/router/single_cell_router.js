@@ -110,6 +110,11 @@ let router = [
         name: 'CCA_heatmap',
         component: resolve => require(['@/views/sc/CCA/CCA_heatmap'], resolve)
       },
+      {
+        path: 'CCA_tSNE',
+        name: 'CCA_tSNE',
+        component: resolve => require(['@/views/sc/CCA/CCA_tSNE'], resolve)
+      }
     ]
   }
 ]

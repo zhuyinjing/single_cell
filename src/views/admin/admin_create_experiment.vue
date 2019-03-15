@@ -37,7 +37,7 @@
 
     <el-dialog  :title="$t('create_experiment.edit_experiment')" :visible.sync="step1Dialog" width="50%">
       <div class="" v-if="$store.state.projectType === 'ScRNA_CCA'">
-        <el-button type="danger" @click="addCondition()">
+        <el-button type="danger" @click="addConditionCCA()">
           <i class="el-icon-circle-plus"></i>
           {{$t('create_experiment.add_condition')}}
         </el-button>
@@ -54,16 +54,23 @@
             v-model.number="item.sampleNum"
             clearable>
           </el-input>
-          <i class="el-icon-remove cursor-poiter" @click="deleteOption(index)"></i>
+          <i class="el-icon-remove cursor-poiter" @click="deleteOptionCCA(index)"></i>
         </div>
       </div>
       <div class="" v-if="$store.state.projectType === 'ScRNA_PCA'">
-        样本数
-        <el-input
-          class="conditioninput width-100"
-          v-model.number="editPCA.sampleNum"
-          clearable>
-        </el-input>
+        <el-button type="danger" @click="addConditionPCA()">
+          <i class="el-icon-circle-plus"></i>
+          {{$t('create_experiment.add_condition')}}
+        </el-button>
+        <div class="padding-10-5" v-for="(item, index, key) in editPCA.sampleName">
+          样本名称
+          <el-input
+            class="conditioninput width-100"
+            v-model.number="editPCA.sampleName[index]"
+            clearable>
+          </el-input>
+          <i class="el-icon-remove cursor-poiter" @click="deleteOptionPCA(index)"></i>
+        </div>
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="step1Dialog = false">{{$t('button.cancel')}}</el-button>
@@ -118,11 +125,17 @@ export default {
       }
       this.step1Dialog = true
     },
-    addCondition () {
+    addConditionPCA () {
+      this.editPCA.sampleName.push('')
+    },
+    addConditionCCA () {
       this.editCCA.sampleGroups.push({sampleGroups: '', groupNum: null})
     },
-    deleteOption (index) {
+    deleteOptionCCA (index) {
       this.editCCA.sampleGroups.splice(index, 1)
+    },
+    deleteOptionPCA (index) {
+      this.editPCA.sampleName.splice(index, 1)
     },
     createExperiment () {
       if (this.$store.state.projectType === 'ScRNA_CCA') {
@@ -156,17 +169,19 @@ export default {
           this.step1Dialog = false
         })
       } else {
-        if (!this.editPCA.sampleNum) { // 不填写条件
+        if (this.editPCA.sampleName.length === 0) { // 不填写条件
           this.$message.error('请填写完整信息！')
           return
         }
-        // 构建样本名称 [s1,s2...]
-        let sampleArr = [...new Array(this.editPCA.sampleNum)].map((k,i) => 'S' + (i + 1))
-
+        let flag = this.editPCA.sampleName.some(item => !item) // 条件中有一项为空
+        if (flag === true) {
+          this.$message.error('请填写完整信息！')
+          return
+        }
         let formData = new FormData()
         formData.append('username', this.$store.state.username)
         formData.append('p', this.$store.state.projectId)
-        formData.append('experimentObjectString', JSON.stringify(sampleArr))
+        formData.append('experimentObjectString', JSON.stringify(this.editPCA.sampleName))
         this.axios.post('/server/create_experiment', formData).then((res) => {
           if(res.data.message_type === 'success') {
             this.$message.success(res.data.message)

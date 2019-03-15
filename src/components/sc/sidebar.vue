@@ -46,8 +46,7 @@
       </el-menu-item-group>
       <el-menu-item-group>
         <span slot="" class="title-style">聚类分析</span>
-        <router-link to="/sc/report_tSNE"><el-menu-item index="report_tSNE">t-SNE样本标记图</el-menu-item></router-link>
-        <router-link to="/sc/report_tSNE"><el-menu-item index="report_tSNE">t-SNE聚类标记图</el-menu-item></router-link>
+        <router-link to="/sc/CCA_tSNE"><el-menu-item index="CCA_tSNE">t-SNE 图</el-menu-item></router-link>
       </el-menu-item-group>
     </el-menu>
   </div>

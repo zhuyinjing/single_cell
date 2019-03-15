@@ -4,7 +4,7 @@
     <p>如下图所示，横坐标与纵坐标分别表示通过典型相关分析后获得的第一典型相关与第二典型相关，图中每一个点代表一个细胞，不同颜色代表不同的样本组。由下图可知，经过典型相关分析后，来自于不同样本组的细胞在投射空间中出现了一定程度的混合，但是相同样本组之间细胞的分布还是更为接近。这需要通过后续肘形图与热图的分析，选取一定数量具有代表性的典型相关进行相互比对，从而获得使不同样本组之间具有更大相关性的降维结果。</p>
     <el-checkbox-group
       v-model="pcArr">
-      <el-checkbox v-for="item in pcList" :label="item" :key="item" style="width:20%;">{{item}}</el-checkbox>
+      <el-checkbox v-for="item in pcList" :label="item" :key="'cc' + item" style="width:20%;">{{item}}</el-checkbox>
     </el-checkbox-group>
 
     <br>
@@ -56,11 +56,11 @@ export default {
   },
   methods: {
     getData() {
-      this.loading = true
       if (this.pcArr.length !== 2) {
         this.$message.error('请选择 2 个CC！')
         return
       }
+      this.loading = true
       // if (this.pcArr.length < 2) {
       //   this.$message.error('请至少选择 2 个CC！')
       //   return

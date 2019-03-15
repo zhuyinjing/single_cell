@@ -216,7 +216,7 @@ export default {
         d3.selectAll('#sampleSvg').remove()
       }
       let width = 800, height = 800
-      let padding = {top:30,right:150,bottom:60,left:60}
+      let padding = {top:30,right:120,bottom:60,left:60}
       let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
       let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
@@ -250,7 +250,7 @@ export default {
          .append("circle")
          .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
          .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
-         .attr("r", 2)
+         .attr("r", 1.5)
          .attr("fill", (d,i) => colorScale(self.data.sampleId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)
@@ -286,7 +286,7 @@ export default {
             .attr("cx",0)
             .attr("cy",(d,i) => i * 30)
             .attr("r",legendR)
-            .attr("fill", d => colorScale(d))
+            .attr("fill", d => colorScale(d.groupName))
 
       legend.selectAll(".text")
             .data(groupArr)
@@ -295,7 +295,7 @@ export default {
             .attr("transform",(d,i) => {
               return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
             })
-            .text(d => d)
+            .text(d => d.groupName)
             .attr("class","groupText")
 
     },
@@ -307,10 +307,10 @@ export default {
         d3.selectAll('#clusterSvg').remove()
       }
       let width = 800, height = 800
-      let padding = {top:30,right:150,bottom:60,left:60}
+      let padding = {top:30,right:120,bottom:60,left:60}
       let clusterSvg = d3.select("#clusterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
-      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+      let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
       let xText = this.data.tsneNumList.tsneNum[0]
       let yText = this.data.tsneNumList.tsneNum[1]
       let sampleArr = Array.from(new Set(this.data.sampleId)).sort()
@@ -336,7 +336,7 @@ export default {
          .append("circle")
          .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
          .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
-         .attr("r", 2)
+         .attr("r", 1.5)
          .attr("fill", (d,i) => colorScale(self.data.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)

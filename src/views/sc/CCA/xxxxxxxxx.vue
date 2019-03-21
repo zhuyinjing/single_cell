@@ -1,50 +1,17 @@
 <template>
-  <div id="container" v-loading="loading"  element-loading-text="请稍等，数据正在加载中..." element-loading-spinner="el-icon-loading" style="height:100%">
+  <div id="container">
     <h2>基因表达量特征分布</h2>
     <p>在单细胞转录组建库测序质量较好且不存在偏性的情况下，各基因在所有细胞中的平均表达量不会集中分布在过高或过低的强度范围内，而且每个基因在不同细胞之间的表达差异会显现出来。如下图所示：x轴表示每个基因在所有细胞中平均表达量的自然对数；y轴表示每个基因的表达量在不同细胞之间的分散程度，分散程度的计算方法是基因表达量方差与基因平均表达量之比的自然对数，用以衡量每个基因在不同细胞之间的表达差异。</p>
     <p>另外，在单细胞转录组研究中，基于细胞中不同基因的表达量进行降维是核心步骤。为了获得合理的降维结果，需要对参与降维过程的基因进行筛选，筛选的原则是保留表达量适中且表达量在不同细胞之间分散程度较大的基因，这样有利于后续的降维。表达量适中说明单细胞转录组建库测序不存在偏性，表达量分散程度较大说明该基因的表达可以反映细胞之间的特征差异。</p>
-    <p>下两图分别展示了在 <span v-for="item in sample">{{item.groupName}}&nbsp;</span>{{sample.length}}个样本组中，所有基因表达量的特征分布。</p>
+    <p>下两图分别展示了在D和W两个样本组中，所有基因表达量的特征分布。</p>
 
-    <div style="white-space: nowrap;">
-      <div id="genePre" style="display:inline-block">
-        <el-select v-model="genePreValue" @change="(() => {selectChange('genePreCarousel', 'genePreValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel ref="genePreCarousel" style="width:800px" height="740px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'genePre', 'nGene')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
-            <div :id="item.groupName + 'genePre'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-      <div id="geneNext" style="display:inline-block">
-        <el-select v-model="geneNextValue" @change="(() => {selectChange('geneNextCarousel', 'geneNextValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel :initial-index="1"	ref="geneNextCarousel" style="width:800px" height="740px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'geneNext', 'nGene')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
-            <div :id="item.groupName + 'geneNext'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-    </div>
-
-    <!-- <div class="" v-for="(item, index) in sample" :key="'sample' + index">
+    <div class="" v-for="(item, index) in sample" :key="'sample' + index">
       <h3>{{index}}样本组基因表达量特征分布</h3>
       <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['表达异质化基因筛选', index + 'd3container'])">{{$t('button.svg')}}</el-button>
       <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
       <div :id="index + 'd3container'"></div>
-    </div> -->
+    </div>
 
 
     <div class="" v-show="tableShow">
@@ -67,6 +34,18 @@
 
     </div>
 
+    <!-- <el-carousel style="width:900px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="change">
+      <el-carousel-item >
+        <div id="d3container"></div>
+      </el-carousel-item>
+      <el-carousel-item >
+      2
+      </el-carousel-item>
+      <el-carousel-item >
+      3
+      </el-carousel-item>
+    </el-carousel> -->
+
     <div class="clear"></div>
   </div>
 </template>
@@ -77,16 +56,13 @@ import * as d3 from 'd3'
 export default {
   data() {
     return {
-      genePreValue: '',
-      geneNextValue: '',
       data: [],
       head0: '',
       head1: '',
       tableData: [],
       tableShow: false,
       table: null,
-      sample: [],
-      loading: false
+      sample: {D: 4, W: 4},
     }
   },
   components: {
@@ -126,58 +102,25 @@ export default {
       })
     },
     initData () {
-      this.loading = true
-      this.axios.get('/singel_cell/server/get_var_gene_feature?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&groupName=').then((res) => {
+      this.axios.get('/singel_cell/server/get_var_gene_feature?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.head0 = res.data.x
           this.head1 = res.data.y
-          this.sample = res.data.ExperimentDesign.sampleGroups
-        } else {
-          this.$message.error(res.data.message)
-        }
-        this.loading = false
-      }).catch(() => {
-        this.$message.error('请求出错！')
-        this.loading = false
-      })
-    },
-    selectChange (carousel, option) {
-      this.$refs[carousel].setActiveItem(this[option])
-    },
-    change (current, pre, boxID, svgType) {
-      this[boxID + 'Value'] = current // select option 当前的值
-      let currentSample = this.sample[current]
-      this.$nextTick(() => {  //  DOM 都加载后 调用画图
-        let hassvg = d3.selectAll('#'+ currentSample.groupName + boxID + svgType + 'svg')._groups[0].length
-        if (hassvg) { // 如果该图之前存在就不再重新渲染了
-          return
-        }
-        if (!this.data[currentSample.groupName]){ // 如果 this.data 不存在这个样本的数据就发送请求
-          this.getNewData(currentSample.groupName,currentSample.sampleList, boxID, svgType)
-        } else {
-          this.initScatterPlot(currentSample.groupName,currentSample.sampleList, boxID, svgType)
-        }
-      })
-    },
-    getNewData (sampleName, sampleList, boxID, svgType) {
-      // this.loading = true
-      this.axios.get('/singel_cell/server/get_var_gene_feature?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&groupName=' + sampleName).then((res) => {
-        if (res.data.message_type === 'success') {
-          this.data = res.data
-          this.head0 = res.data.x
-          this.head1 = res.data.y
-          this.sample = res.data.ExperimentDesign.sampleGroups
-          this.initScatterPlot(sampleName, sampleList, boxID, svgType)
+          Object.keys(this.sample).map(item => this.initScatterPlot(item))
         } else {
           this.$message.error(res.data.message)
         }
       })
     },
-    initScatterPlot (sampleName, sampleList, boxID, svgType) {
+    initScatterPlot (sampleName) {
       let self = this
-      var width = 800, height = 600;
-      let scattersvg = d3.select("#" + sampleName + boxID).append("svg").attr("width", width).attr("height", height).attr("id", sampleName + boxID + svgType + 'svg')
+      let hassvg = d3.selectAll('#' + sampleName + 'scattersvg')
+      if (hassvg) {
+        d3.selectAll('#' + sampleName + 'scattersvg').remove()
+      }
+      var width = 1000, height = 600;
+      var scattersvg = d3.select("#"+ sampleName +"d3container").append("svg").attr("width", width).attr("height", height).attr("id", sampleName + "scattersvg")
       var data = this.data[sampleName]
       var padding = {top:30,right:30,bottom:60,left:60}
       var xScale = d3.scaleLinear().domain([d3.min(data.map(item => item[0])) / 1.2, d3.max(data.map(item => item[0])) * 1.2]).range([0,width - padding.left - padding.right]).nice()
@@ -326,9 +269,9 @@ export default {
           .style("display", "none");
 
       let brush = d3.brush().extent([[padding.left,padding.top],[width - padding.right,height - padding.bottom]]).on("brush", brushing).on("end", brushend)
-      // scattersvg.append("g")
-      //     .attr("class", "brush")
-      //     .call(brush);
+      scattersvg.append("g")
+          .attr("class", "brush")
+          .call(brush);
 
       function brushing () {
         let x = d3.mouse(this)[0]
@@ -420,19 +363,5 @@ export default {
 <style media="screen">
 .selected {
   fill: #ff3399;
-}
-.el-carousel__arrow {
-  top: 80% !important;
-}
-.el-carousel__arrow--right {
-  right: 40% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__arrow--left {
-  left: 40% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__indicators--outside button {
-  display: none !important;
 }
 </style>

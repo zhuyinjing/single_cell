@@ -35,7 +35,7 @@ export default {
   components: {
   },
   mounted() {
-    this.axios.get('singel_cell/server/get_pca_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username).then((res) => {
+    this.axios.get('singel_cell/server/get_analysis_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username).then((res) => {
       if (res.data.message_type === 'success') {
         this.pcList = res.data.analysisNumList.analysisNum
         this.pcArr = this.pcList.slice(0,9)
@@ -47,7 +47,7 @@ export default {
   },
   methods: {
     getData () {
-      this.axios.get('singel_cell/server/get_pca_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+      this.axios.get('singel_cell/server/get_analysis_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.initHeatmap()
@@ -80,7 +80,7 @@ export default {
         let rectData = this.data[this.pcArr[i]].umiMatrixList
         let yText = this.data[this.pcArr[i]].geneNameList
 
-        let colorScale = d3.scaleSequential().domain(d3.extent(rectData.map(d => d.umiValue))).interpolator(d3.interpolatePlasma)
+        let colorScale = d3.scaleSequential().domain(d3.extent(rectData.map(d => d))).interpolator(d3.interpolatePlasma)
 
         let w = (width * xData.length + padding.right) * (i % number) + (padding.left * (parseInt(i / number) + 1)) // 每个 g 的位移
         let h = (height * yText.length + padding.bottom) * parseInt(i / number) + (padding.top * (parseInt(i / number) + 1))
@@ -94,7 +94,7 @@ export default {
            .attr("y", (d,i) => height * parseInt(i / xData.length))
            .attr("width", width)
            .attr("height", height)
-           .attr("fill", (d,i) => colorScale(d.umiValue))
+           .attr("fill", (d,i) => colorScale(d))
           // .on('mouseover', function (d, i) {
           //     return tooltip.style('visibility', 'visible').text(d.umiValue)
           //   })

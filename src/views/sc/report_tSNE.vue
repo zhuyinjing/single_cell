@@ -128,6 +128,34 @@ export default {
     }
   },
   methods: {
+    aaa () {
+      let circles = d3.selectAll("circle").filter((d) => d === '0')
+
+      this.timer = setInterval(() => {
+        circles.transition()
+          .duration(2000)
+          .attr('r', 10)
+          .transition()
+          .duration(2000)
+          .attr('r', 8)
+      }, 4000)
+      // repeat ()
+      // function repeat() {
+        // circles
+        //   .attr('r', 8)
+        //   .transition()
+        //   .duration(2000)
+        //   .attr('r', 10)
+        //   .transition()
+        //   .duration(2000)
+        //   .attr('r', 8)
+        //   .on("end", repeat);
+      //   };
+
+    },
+    bbb () {
+      window.clearInterval(this.timer)
+    },
     initData () {
       this.loading = true
       this.axios.get('/singel_cell/server/get_tsne_score?username='+ this.$store.state.username +'&p=' + this.$store.state.projectId).then((res) => {

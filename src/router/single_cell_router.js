@@ -114,6 +114,11 @@ let router = [
         path: 'CCA_tSNE',
         name: 'CCA_tSNE',
         component: resolve => require(['@/views/sc/CCA/CCA_tSNE'], resolve)
+      },
+      {
+        path: 'test',
+        name: 'test',
+        component: resolve => require(['@/views/sc/CCA/test'], resolve)
       }
     ]
   }

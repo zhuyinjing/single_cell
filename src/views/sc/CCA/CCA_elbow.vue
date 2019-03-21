@@ -22,6 +22,10 @@ export default {
   components: {
   },
   mounted() {
+    let arr = [{group:[1,2,3],},{group: [4,5,6]}]
+    let brr = []
+    brr = arr.reduce((a,b) => [...a.group, ...b.group])
+    console.log(brr);
     this.initData()
   },
   methods: {
@@ -120,21 +124,5 @@ export default {
 }
 #elbowContainer {
   white-space: nowrap;
-}
-</style>
-<style media="screen">
-.el-carousel__arrow {
-  top: 100% !important;
-}
-.el-carousel__arrow--right {
-  right: 45% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__arrow--left {
-  left: 45% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__indicators--outside button {
-  display: none !important;
 }
 </style>

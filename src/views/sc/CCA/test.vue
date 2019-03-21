@@ -5,78 +5,7 @@
     <p>唯一分子识别码（Unique Molecular Identifier，UMI），可以用来对单细胞基因表达进行绝对定量。在对单细胞RNA分子进行PCR扩增之前，每个转录本都会被加上UMI。对于回贴到同一基因的所有读段，只需要计算UMI的数量，就可以对单细胞基因表达进行绝对定量，从而排除PCR扩增对定量的影响。对于一个成功的单细胞转录组建库测序而言，不同细胞的UMI数量总和应该具有比较宽泛的分布，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞检测到的UMI数量总和的分布进行描绘，可以辅助判断建库测序质量。</p>
     <p>下两图分别展示了在 <span v-for="item in sample">{{item.groupName}}&nbsp;</span>{{sample.length}}个样本组中，所有细胞被检测到发生表达的基因数量以及UMI数量总和的分布。</p>
 
-    <div style="white-space: nowrap;">
-      <div id="genePre" style="display:inline-block">
-        <el-select v-model="genePreValue" @change="(() => {selectChange('genePreCarousel', 'genePreValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel ref="genePreCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'genePre', 'nGene')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
-            <div :id="item.groupName + 'genePre'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-      <div id="geneNext" style="display:inline-block">
-        <el-select v-model="geneNextValue" @change="(() => {selectChange('geneNextCarousel', 'geneNextValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel :initial-index="1"	ref="geneNextCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'geneNext', 'nGene')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
-            <div :id="item.groupName + 'geneNext'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-    </div>
-
-    <div style="white-space: nowrap;">
-      <div id="umiPre" style="display:inline-block">
-        <el-select v-model="umiPreValue" @change="(() => {selectChange('umiPreCarousel', 'umiPreValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel ref="umiPreCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiPre', 'nUMI')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'umiPre'">
-            <div :id="item.groupName + 'umiPre'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-      <div id="umiNext" style="display:inline-block">
-        <el-select v-model="umiNextValue" @change="(() => {selectChange('umiNextCarousel', 'umiNextValue')})">
-          <el-option
-            v-for="(item, index) in sample"
-            :key="item.groupName"
-            :label="item.groupName"
-            :value="index">
-          </el-option>
-        </el-select>
-        <el-carousel :initial-index="1"	ref="umiNextCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiNext', 'nUMI')})">
-          <el-carousel-item v-for="(item, index) in sample" :key="index + 'umiNext'">
-            <div :id="item.groupName + 'umiNext'"></div>
-          </el-carousel-item>
-        </el-carousel>
-      </div>
-    </div>
-
-
-
-
-
-
-    <!-- <div class="svgContainer" v-for="item in sample">
+    <div class="svgContainer" v-for="item in sample">
       <h3>{{item.groupName}}样本组基因与UMI数量分布</h3>
       <div class="svgbox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['geneCounts', item.groupName + 'geneContainer'])">{{$t('button.svg')}}</el-button>
@@ -84,7 +13,7 @@
 
         <div :id="item.groupName + 'geneContainer'"></div>
       </div>
-    </div> -->
+    </div>
 
   </div>
 </template>
@@ -95,10 +24,6 @@ import * as d3 from 'd3'
 export default {
   data() {
     return {
-      genePreValue: '',
-      geneNextValue: '',
-      umiPreValue: '',
-      umiNextValue: '',
       sample: [],
       data: [],
       loading: false
@@ -106,16 +31,21 @@ export default {
   },
   components: {
   },
-  mounted() {
+  mounted () {
     this.initData()
   },
   methods: {
     initData () {
       this.loading = true
-      this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&groupName=').then((res) => {
+      this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.sample = res.data.groupName
+          this.$nextTick(() => {  //  DOM 都加载后 调用画图
+            this.sample.map((sampleName) => {
+              this.initGene(sampleName.groupName,sampleName.sampleList)
+            })
+          })
         } else {
           this.$message.error(res.data.message)
         }
@@ -125,46 +55,16 @@ export default {
         this.loading = false
       })
     },
-    selectChange (carousel, option) {
-      this.$refs[carousel].setActiveItem(this[option])
-    },
-    change (current, pre, boxID, svgType) {
-      this[boxID + 'Value'] = current // select option 当前的值
-      let currentSample = this.sample[current]
-      this.$nextTick(() => {  //  DOM 都加载后 调用画图
-        let hassvg = d3.selectAll('#'+ currentSample.groupName + boxID + svgType + 'svg')._groups[0].length
-        if (hassvg) { // 如果该图之前存在就不再重新渲染了
-          return
-        }
-        if (!this.data[currentSample.groupName]){ // 如果 this.data 不存在这个样本的数据就发送请求
-          this.getNewData(currentSample.groupName,currentSample.sampleList, boxID, svgType)
-        } else {
-          this.initGene(currentSample.groupName,currentSample.sampleList, boxID, svgType)
-        }
-      })
-    },
-    getNewData (sampleName, sampleList, boxID, svgType) {
-      // this.loading = true
-      this.axios.get('/singel_cell/server/get_umi_meta_data?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&groupName=' + sampleName).then((res) => {
-        if (res.data.message_type === 'success') {
-          this.data = res.data
-          this.sample = res.data.groupName
-          this.initGene(sampleName, sampleList, boxID, svgType)
-        } else {
-          this.$message.error(res.data.message)
-        }
-        // this.loading = false
-      }).catch(() => {
-        this.$message.error('请求出错！')
-        // this.loading = false
-      })
-    },
-    initGene (sampleName, sampleList, boxID, svgType) {
+    initGene (sampleName, sampleList) {
       let self = this
-      let svgWidth = 600, svgHeight = 500
+      let hassvg = d3.selectAll('#'+ sampleName +'geneCountsSvg')._groups[0].length
+      if (hassvg) {
+        d3.selectAll('#'+ sampleName +'geneCountsSvg').remove()
+      }
+      let svgWidth = 1200, svgHeight = 500
       let width = 600, height = 500 // 每个 g 标签的宽度/高度
       let padding = {top:30,right:60,bottom:60,left:80}
-      let violinsvg = d3.select("#" + sampleName + boxID).append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", sampleName + boxID + svgType + 'svg')
+      let violinsvg = d3.select("#" + sampleName +"geneContainer").append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", sampleName + "geneCountsSvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
       let tooltip = d3.select('#container')
         .append('div')
@@ -190,7 +90,7 @@ export default {
 
         // Build and Show the Y scale
         var y = d3.scaleLinear()
-          .domain(d3.extent(this.data[sampleName].map(item => item[svgType])))          // Note that here the Y scale is set manually
+          .domain(d3.extent(this.data[sampleName].map(item => item.nGene)))          // Note that here the Y scale is set manually
           .range([height - padding.bottom, padding.top]).nice()
 
           svg.append("g")
@@ -204,7 +104,7 @@ export default {
         for (let j = 0;j < sampleList.length;j++) {
           var data = this.data[sampleName].filter(item => item.sampleName === sampleList[j])
 
-          var yData = data.map(item => item[svgType])
+          var yData = data.map(item => item.nGene)
 
           // Features of the histogram
           var histogram = d3.histogram()
@@ -216,7 +116,7 @@ export default {
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
               .key(function(d) { return d.sampleName;})
               .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d[svgType];})    // Keep the variable called Sepal_Length
+                input = d.map(function(d) { return d.nGene;})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.
                 return(bins)
               })
@@ -263,7 +163,7 @@ export default {
             .enter()
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
-            .attr("cy", (d, i) => y(d[svgType]))
+            .attr("cy", (d, i) => y(d['nGene']))
             .attr("r", 1.5)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
@@ -280,7 +180,113 @@ export default {
         // x 轴文字
         svg.append("text")
           .attr("transform", "translate("+ (width / 2 - 25) +", " + padding.top + ")")
-          .text(sampleName + ' ' + svgType)
+          .text("nGene")
+          .attr("font-size", "16px")
+
+   let svgUMI = violinsvg.append("g").attr("transform","translate("+ width +",0)")
+
+        // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
+        var x = d3.scaleBand()
+          .range([ padding.left, width - padding.right ])
+          .domain(sampleList)
+          .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
+        svgUMI.append("g")
+          .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
+          .call(d3.axisBottom(x))
+
+        // Build and Show the Y scale
+        var y = d3.scaleLinear()
+          .domain(d3.extent(this.data[sampleName].map(item => item.nUMI)))          // Note that here the Y scale is set manually
+          .range([height - padding.bottom, padding.top]).nice()
+
+        svgUMI.append("g")
+           .attr("transform", "translate("+ padding.left +",0)")
+           .call(d3.axisLeft(y))
+
+        // 随机散点
+        var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
+
+        // 每个图 按分组去画 violin plot
+        for (let j = 0;j < sampleList.length;j++) {
+          var data = this.data[sampleName].filter(item => item.sampleName === sampleList[j])
+
+          var yData = data.map(item => item.nUMI)
+
+          // Features of the histogram
+          var histogram = d3.histogram()
+              .domain(d3.extent(yData))
+              .thresholds(y.ticks(20))    // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
+              .value(d => d)
+          var input, bins,allBins,lengths,longuest
+          // Compute the binning for each group of the dataset
+          var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
+              .key(function(d) { return d.sampleName;})
+              .rollup(function(d) {   // For each key..
+                input = d.map(function(d) { return d.nUMI;})    // Keep the variable called Sepal_Length
+                bins = histogram(input)   // And compute the binning on it.
+                return(bins)
+              })
+              .entries(data)
+
+          // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
+          var maxNum = 0
+          for (let k = 0;k < sumstat.length;k++){
+            allBins = sumstat[k].value
+            lengths = allBins.map(function(a){return a.length;})
+            longuest = d3.max(lengths)
+            if (longuest > maxNum) { maxNum = longuest }
+          }
+          // The maximum width of a violin must be x.bandwidth = the width dedicated to a group
+          var xNum = d3.scaleLinear()
+            .range([0, x.bandwidth()])
+            .domain([-maxNum,maxNum])
+
+          // Add the shape to this svg!
+          svgUMI
+            .selectAll("myViolin")
+            .data(sumstat)
+            .enter()        // So now we are working group per group
+            .append("g")
+            .attr("transform", function(d){ return("translate(" + x(d.key) +" ,0)") } ) // Translation on the right to be at the group position
+            .append("path")
+            .datum(function(d){ return(d.value)})     // So now we are working bin per bin
+            .style("stroke", "black")
+            .style("fill",(d,i) => colorScale(j))
+            .attr("d", d3.area()
+                         .x0(function(d){ return(xNum(-d.length)) } )
+                         .x1(function(d){ return(xNum(d.length)) } )
+                         .y(function(d){ return(y(d.x0)) } )
+                         .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
+            )
+
+          let x0 = Math.ceil(x(sampleList[j]))
+          let x1 = Math.floor(x(sampleList[j]) + x.bandwidth())
+
+          let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
+
+          svgUMI.selectAll("g.circle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", (d,i) => xLinear(randomData[i]))
+            .attr("cy", (d, i) => y(d['nUMI']))
+            .attr("r", 1.5)
+            .attr("fill", "black")
+            .on('mouseover', function (d, i) {
+              return tooltip.style('visibility', 'visible').text(d['cellId'])
+            })
+            .on('mousemove', function (d, i) {
+              return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
+            })
+            .on('mouseout', function (d, i) {
+              return tooltip.style('visibility', 'hidden')
+            })
+        }
+
+        // x 轴文字
+        svgUMI.append("text")
+          .attr("transform", "translate("+ (width / 2 - 25) +", " + padding.top + ")")
+          .text("nUMI")
           .attr("font-size", "16px")
 
     },
@@ -301,21 +307,5 @@ export default {
 }
 .svgbox {
   display: inline-block;
-}
-</style>
-<style media="screen">
-.el-carousel__arrow {
-  top: 80% !important;
-}
-.el-carousel__arrow--right {
-  right: 40% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__arrow--left {
-  left: 40% !important;
-  /* background: #409eff !important; */
-}
-.el-carousel__indicators--outside button {
-  display: none !important;
 }
 </style>

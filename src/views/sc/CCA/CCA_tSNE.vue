@@ -20,6 +20,15 @@
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
+        <!-- <el-select v-model="sampleValue" @change="selectChange">
+          <el-option
+            v-for="item in data.groupName"
+            :key="item.groupName"
+            :label="item.groupName"
+            :value="item.groupName">
+          </el-option>
+        </el-select> -->
+
         <!-- <span v-show="splitShow">
           <el-button type="info" size="small" id="revokeBtn">撤销</el-button>
           <el-button type="info" size="small" id="resetBtn">重新选择</el-button>
@@ -110,7 +119,9 @@ export default {
       mergeGroupName: '',
       changeNameDialogShow: false, // 更改组名
       changeNameForm: {},
-      loading: false
+      loading: false,
+      sampleValue: '',
+      timer: '',
     }
   },
   components: {
@@ -128,6 +139,19 @@ export default {
     }
   },
   methods: {
+    selectChange () { // 选中的样本组的 circle 高亮
+      window.clearInterval(this.timer)
+      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[i] === this.sampleValue)
+
+      this.timer = setInterval(() => {
+        circles.transition()
+          .duration(2000)
+          .attr('r', 3)
+          .transition()
+          .duration(2000)
+          .attr('r', 1.5)
+      }, 4000)
+    },
     initData () {
       this.loading = true
       this.axios.get('/singel_cell/server/get_tsne_score?username='+ this.$store.state.username +'&p=' + this.$store.state.projectId).then((res) => {
@@ -334,6 +358,7 @@ export default {
          .data(this.data.cellId)
          .enter()
          .append("circle")
+         .attr("class", "clusterCircle")
          .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
          .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
          .attr("r", 1.5)

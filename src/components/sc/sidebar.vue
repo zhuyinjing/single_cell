@@ -48,6 +48,10 @@
         <span slot="" class="title-style">聚类分析</span>
         <router-link to="/sc/CCA_tSNE"><el-menu-item index="CCA_tSNE">t-SNE 图</el-menu-item></router-link>
       </el-menu-item-group>
+      <el-menu-item-group>
+        <span slot="" class="title-style">类间特征基因表达分析</span>
+        <router-link to="/sc/CCA_group_violin"><el-menu-item index="CCA_group_violin">类间特征基因表达分析</el-menu-item></router-link>
+      </el-menu-item-group>
     </el-menu>
   </div>
 </template>

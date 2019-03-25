@@ -72,22 +72,42 @@
       </div>
       <div v-show="filterMethod" style="margin-top:10px">
           <div class="labelStyle">
-            <label class="radio-inline control-label">pValAdj from</label>
+            <label class="radio-inline control-label">pValAdj{{sample[0]}} from</label>
           </div>
          <el-input style="width: 80px;" size='mini' v-model="pValueAdjStartA"></el-input>
         to  <el-input style="width: 80px;" size='mini' v-model="pValueAdjEndA"></el-input>
 
           <div class="labelStyle">
-            <label class="radio-inline control-label">pct1 from</label>
+            <label class="radio-inline control-label">pct1{{sample[0]}} from</label>
           </div>
           <el-input style="width: 80px;" size='mini' v-model="pct1StartA"></el-input>
         to <el-input style="width: 80px;" size='mini' v-model="pct1EndA"></el-input>
 
           <div class="labelStyle">
-            <label class="radio-inline control-label">pct2 from</label>
+            <label class="radio-inline control-label">pct2{{sample[0]}} from</label>
           </div>
           <el-input style="width: 80px;" size='mini' v-model="pct2StartA"></el-input>
         to <el-input style="width: 80px;" size='mini' v-model="pct2EndA"></el-input>
+
+        <br>
+        <div class="labelStyle">
+          <label class="radio-inline control-label">pValAdj{{sample[1]}} from</label>
+        </div>
+       <el-input style="width: 80px;" size='mini' v-model="pValueAdjStartB"></el-input>
+      to  <el-input style="width: 80px;" size='mini' v-model="pValueAdjEndB"></el-input>
+
+        <div class="labelStyle">
+          <label class="radio-inline control-label">pct1{{sample[1]}} from</label>
+        </div>
+        <el-input style="width: 80px;" size='mini' v-model="pct1StartB"></el-input>
+      to <el-input style="width: 80px;" size='mini' v-model="pct1EndB"></el-input>
+
+        <div class="labelStyle">
+          <label class="radio-inline control-label">pct2{{sample[1]}} from</label>
+        </div>
+        <el-input style="width: 80px;" size='mini' v-model="pct2StartB"></el-input>
+      to <el-input style="width: 80px;" size='mini' v-model="pct2EndB"></el-input>
+
         <el-button type="primary" @click="filter()" size='mini'>{{$t('button.filter')}}</el-button>
         <el-button type="info" @click="clear()" size='mini'>{{$t('button.clear')}}</el-button>
 
@@ -101,11 +121,11 @@
               <th> <input type="checkbox" name="" value="" class='checkall'> </th>
               <th>geneId</th>
               <th>geneName</th>
-              <th>avgLogFC</th>
-              <th>pValAdj</th>
-              <th>pValue</th>
-              <th>pct1</th>
-              <th>pct2</th>
+              <th v-for="item in sample">avgLogFC{{item}}</th>
+              <th v-for="item in sample">pValAdj{{item}}</th>
+              <th v-for="item in sample">pValue{{item}}</th>
+              <th v-for="item in sample">pct1{{item}}</th>
+              <th v-for="item in sample">pct2{{item}}</th>
             </tr>
           </thead>
       </table>
@@ -128,6 +148,12 @@ export default {
       pct1EndA: '',
       pct2StartA: '',
       pct2EndA: '',
+      pValueAdjStartB: '',
+      pValueAdjEndB: '',
+      pct1StartB: '',
+      pct1EndB: '',
+      pct2StartB: '',
+      pct2EndB: '',
       violinSvgShow: false,
       data: [],
       table: null,
@@ -139,12 +165,13 @@ export default {
       scatterData: [],
       filterMethod: false,
       activeTab: 'violinSvgShow',
+      sample: [],
     }
   },
   components: {
   },
   mounted() {
-    this.initTable()
+    this.getTableHead()
 
     //  给动态生成的 checkbox 绑定 click 事件，只需要绑定一次
     let self = this
@@ -211,6 +238,29 @@ export default {
       this.pct1EndA = ''
       this.pct2StartA = ''
       this.pct2EndA = ''
+      this.pValueAdjStartB = ''
+      this.pValueAdjEndB = ''
+      this.pct1StartB = ''
+      this.pct1EndB = ''
+      this.pct2StartB = ''
+      this.pct2EndB = ''
+    },
+    getTableHead () {
+      let form = new FormData()
+      form.append('username', this.$store.state.username)
+      form.append('p', this.$store.state.projectId)
+      form.append('sEcho', 1)
+      form.append('iDisplayStart', 0)
+      form.append('iDisplayLength', 1)
+      this.axios.post('/singel_cell/server/search_ccm_list', form).then(res => {
+        if (res.data.message_type = 'success') {
+          this.sample = Object.values(res.data.aData[0].sampleKey)
+          this.initTable()
+        } else {
+          this.$message.error(res.data.message)
+        }
+      })
+
     },
     initTable () {
       let self = this
@@ -264,7 +314,13 @@ export default {
                               +"&pct1StartA=" + (self.filterMethod === false ? '' :self.pct1StartA)
                               +"&pct1EndA=" + (self.filterMethod === false ? '' :self.pct1EndA)
                               +"&pct2StartA=" + (self.filterMethod === false ? '' :self.pct2StartA)
-                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA) ,
+                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA)
+                              +"&pValueAdjStartB=" + (self.filterMethod === false ? '' :self.pValueAdjStartB)
+                              +'&pValueAdjEndB=' + (self.filterMethod === false ? '' :self.pValueAdjEndB)
+                              +"&pct1StartB=" + (self.filterMethod === false ? '' :self.pct1StartB)
+                              +"&pct1EndB=" + (self.filterMethod === false ? '' :self.pct1EndB)
+                              +"&pct2StartB=" + (self.filterMethod === false ? '' :self.pct2StartB)
+                              +"&pct2EndB=" + (self.filterMethod === false ? '' :self.pct2EndB),
               "rowCallback": function( row, data ) {
                 //  在当前页 选中 切换页面回来后 还是选中状态
                 if ( $.inArray(data.geneId, self.selected) !== -1 ) {
@@ -287,8 +343,18 @@ export default {
                   "render": function (data) {
                     return data.toFixed(3)
                   }
-              }, {
+              },  {
+                  "mDataProp" : "avgLogFCB",
+                  "render": function (data) {
+                    return data.toFixed(3)
+                  }
+              },{
                   "mDataProp" : "pValAdjA",
+                  "render": function (data) {
+                    return self.num2e(data)
+                  }
+              }, {
+                  "mDataProp" : "pValAdjB",
                   "render": function (data) {
                     return self.num2e(data)
                   }
@@ -298,12 +364,27 @@ export default {
                     return data.toFixed(3)
                   }
               }, {
+                  "mDataProp" : "pValueB",
+                  "render": function (data) {
+                    return data.toFixed(3)
+                  }
+              }, {
                   "mDataProp" : "pct1A",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               }, {
+                  "mDataProp" : "pct1B",
+                  "render": function (data) {
+                    return data.toFixed(3)
+                  }
+              }, {
                   "mDataProp" : "pct2A",
+                  "render": function (data) {
+                    return data.toFixed(3)
+                  }
+              },{
+                  "mDataProp" : "pct2B",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
@@ -727,7 +808,7 @@ export default {
 }
 .labelStyle {
   display:inline-block;
-  width:80px;
+  width:95px;
   text-align:end;
 }
 .filterbtnDiv {

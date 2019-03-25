@@ -22,10 +22,6 @@ export default {
   components: {
   },
   mounted() {
-    let arr = [{group:[1,2,3],},{group: [4,5,6]}]
-    let brr = []
-    brr = arr.reduce((a,b) => [...a.group, ...b.group])
-    console.log(brr);
     this.initData()
   },
   methods: {

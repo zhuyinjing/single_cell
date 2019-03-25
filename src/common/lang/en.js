@@ -107,6 +107,7 @@ module.exports = {
     sample_data: 'FASTQ DATA',
     file: 'FILE',
     upload: 'UPLOAD',
+    import: 'IMPORT',
     upload_progress: 'UPLOADING PROGRESS',
     import_server_side: 'IMPORT SERVER-SIDE FILE DIRECTORY',
     upload_file: 'UPLOAD FILES'

@@ -116,10 +116,10 @@ let router = [
         component: resolve => require(['@/views/sc/CCA/CCA_tSNE'], resolve)
       },
       {
-        path: 'test',
-        name: 'test',
-        component: resolve => require(['@/views/sc/CCA/test'], resolve)
-      }
+        path: 'CCA_group_violin',
+        name: 'CCA_group_violin',
+        component: resolve => require(['@/views/sc/CCA/CCA_group_violin'], resolve)
+      },
     ]
   }
 ]

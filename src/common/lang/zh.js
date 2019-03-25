@@ -107,6 +107,7 @@ module.exports = {
     sample_data: '样本数据',
     file: '文件',
     upload: '上传',
+    import: '导入',
     upload_progress: '上传进度',
     import_server_side: '导入服务器端文件目录',
     upload_file: '上传文件'

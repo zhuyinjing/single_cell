@@ -118,7 +118,8 @@
       <table id="table" cellspacing="0" width="100%" class="display table table-striped table-bordered">
           <thead>
             <tr>
-              <th> <input type="checkbox" name="" value="" class='checkall'> </th>
+              <!-- <th> <input type="checkbox" name="" value="" class='checkall'> </th> -->
+              <th></th>
               <th>geneId</th>
               <th>geneName</th>
               <th v-for="item in sample">avgLogFC{{item}}</th>
@@ -175,32 +176,32 @@ export default {
 
     //  给动态生成的 checkbox 绑定 click 事件，只需要绑定一次
     let self = this
-    $(".checkall").click(function () {
-        var checked = $(this).prop("checked")
-        // 把当前页选中的从 selected 去掉 再全部 concat 进去
-        if (checked === true) {
-          $(".checkchild").not("input:checked").each(function () {
-            self.selected.push($(this)[0].value)
-          })
-        } else {
-          self.currentData.map((data) => {
-            let index = self.selected.indexOf(data)
-            self.selected.splice(index, 1)
-          })
-        }
-        $(".checkchild").prop("checked", checked)
-    });
+    // $(".checkall").click(function () {
+    //     var checked = $(this).prop("checked")
+    //     // 把当前页选中的从 selected 去掉 再全部 concat 进去
+    //     if (checked === true) {
+    //       $(".checkchild").not("input:checked").each(function () {
+    //         self.selected.push($(this)[0].value)
+    //       })
+    //     } else {
+    //       self.currentData.map((data) => {
+    //         let index = self.selected.indexOf(data)
+    //         self.selected.splice(index, 1)
+    //       })
+    //     }
+    //     $(".checkchild").prop("checked", checked)
+    // });
     $("#table").on("click", 'td input[type=checkbox]', function () {
       let checked = $(this).prop("checked")
       if (checked === true) {
         self.selected.push(this.value)
         //  如果页面上的 checkbox 全选上了 将 checkall 赋值为 true
-        if ($(".checkchild:checked").length === self.currentData.length) {
-          $(".checkall").prop("checked", true)
-        }
+        // if ($(".checkchild:checked").length === self.currentData.length) {
+        //   $(".checkall").prop("checked", true)
+        // }
       } else {
         //  一旦取消选中 则将全选按钮赋值为 false
-        $(".checkall").prop("checked", false)
+        // $(".checkall").prop("checked", false)
         let index = self.selected.indexOf(this.value)
         self.selected.splice(index, 1)
       }
@@ -279,7 +280,7 @@ export default {
                 }
               }
             }
-            $(".checkall").prop("checked", flag)
+            // $(".checkall").prop("checked", flag)
         }).DataTable({
               "lengthMenu": [
                 [10,25, 50, 100],
@@ -429,21 +430,13 @@ export default {
       let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-      let tooltip = d3.select('#container')
-        .append('div')
-        .style('position', 'absolute')
-        .style('z-index', '10')
-        .style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '12px')
-        .style('font-weight', 'bold')
-        .text('')
-      let xData = this.data.groupNumberList // 分组
+
+      let xData = this.data.clusterNameList // 分组
 
       for (let i = 0;i < this.selected.length;i++) {
         let svg = violinsvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
 
-        var yValueArr = this.data[this.selected[i]].map(item => item.umiValue)
+        var yValueArr = this.data[this.selected[i]].map(item => item[2])
 
         // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
         var x = d3.scaleBand()
@@ -468,9 +461,9 @@ export default {
 
         // 每个图 按分组去画 violin plot
         for (let j = 0;j < xData.length;j++) {
-          var data = this.data[this.selected[i]].filter(item => item.cellGroup === xData[j])
+          var data = this.data[this.selected[i]].filter(item => item[1] === xData[j])
 
-          var yData = data.map(item => item.umiValue)
+          var yData = data.map(item => item[2])
 
           // Features of the histogram
           var histogram = d3.histogram()
@@ -480,9 +473,9 @@ export default {
           var input, bins,allBins,lengths,longuest
           // Compute the binning for each group of the dataset
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d.cellGroup;})
+              .key(function(d) { return d[1];})
               .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d.umiValue;})    // Keep the variable called Sepal_Length
+                input = d.map(function(d) { return d[2];})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.
                 return(bins)
               })
@@ -518,34 +511,11 @@ export default {
                          .y(function(d){ return(y(d.x0)) } )
                          .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
             )
-
-          let x0 = Math.ceil(x(xData[j]))
-          let x1 = Math.floor(x(xData[j]) + x.bandwidth())
-
-          let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
-
-          svg.selectAll("g.circle")
-            .data(data)
-            .enter()
-            .append("circle")
-            .attr("cx", (d,i) => xLinear(randomData[i]))
-            .attr("cy", (d, i) => y(d['umiValue']))
-            .attr("r", 1.5)
-            .attr("fill", "black")
-            .on('mouseover', function (d, i) {
-              return tooltip.style('visibility', 'visible').text(d['cellId'])
-            })
-            .on('mousemove', function (d, i) {
-              return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-            })
-            .on('mouseout', function (d, i) {
-              return tooltip.style('visibility', 'hidden')
-            })
         }
 
         svg.append("text")
           .attr("transform", "translate("+ (width / 2) +", "+ padding.top/2 +")")
-          .text(this.data[this.selected[i]][0].geneName)
+          .text(this.data[this.selected[i]][0][0])
           .attr("text-anchor", "middle")
           .attr("font-size", "16px")
       }

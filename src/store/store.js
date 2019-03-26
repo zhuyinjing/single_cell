@@ -45,6 +45,8 @@ export default new Vuex.Store({
     },
     svgDescribeShow: false,
     projectType: null,
+    commonInfo: null, // tSNE 骨架信息
+
   },
   mutations: {
     setusername: (state, data) => {
@@ -113,6 +115,9 @@ export default new Vuex.Store({
     setprojectType: (state, data) => {
       sessionStorage.setItem('projectType', data)
       state.projectType = data
+    },
+    setcommonInfo: (state, data) => {
+      state.commonInfo = data
     },
     // d3savePDF: (state, data) => {
     //   let that = this

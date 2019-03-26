@@ -112,7 +112,15 @@
         <el-button type="info" @click="clear()" size='mini'>{{$t('button.clear')}}</el-button>
 
       </div>
-    <br>
+
+      <div style="margin-top: 20px">
+        请选择显示的 cluster：
+        <el-radio-group v-model="clusterRadio" size="mini" @change="filter">
+          <el-radio-button v-for="item in $store.state.commonInfo.clusterNameList" :key="item" :label="item"></el-radio-button>
+        </el-radio-group>
+      </div>
+
+      <br>
 
     <div class="">
       <table id="table" cellspacing="0" width="100%" class="display table table-striped table-bordered">
@@ -167,6 +175,7 @@ export default {
       filterMethod: false,
       activeTab: 'violinSvgShow',
       sample: [],
+      clusterRadio: this.$store.state.commonInfo.clusterNameList[0],
     }
   },
   components: {
@@ -309,6 +318,7 @@ export default {
               "sAjaxSource" : "/singel_cell/server/search_ccm_list"
                               +"?username=" + self.$store.state.username
                               +"&p=" + self.$store.state.projectId
+                              +"&clusterName=" + self.clusterRadio
                               +"&geneId=" + (self.filterMethod === false ? self.geneId: '')
                               +"&pValueAdjStartA=" + (self.filterMethod === false ? '' :self.pValueAdjStartA)
                               +'&pValueAdjEndA=' + (self.filterMethod === false ? '' :self.pValueAdjEndA)

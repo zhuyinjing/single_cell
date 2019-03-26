@@ -92,6 +92,14 @@
         <el-button type="info" @click="clear()" size='mini'>{{$t('button.clear')}}</el-button>
 
       </div>
+
+    <div style="margin-top: 20px">
+      请选择显示的 cluster：
+      <el-radio-group v-model="clusterRadio" size="mini" @change="filter">
+        <el-radio-button v-for="item in $store.state.commonInfo.clusterNameList" :key="item" :label="item"></el-radio-button>
+      </el-radio-group>
+    </div>
+
     <br>
 
     <div class="">
@@ -140,6 +148,7 @@ export default {
       scatterData: [],
       filterMethod: false,
       activeTab: 'violinSvgShow',
+      clusterRadio: this.$store.state.commonInfo.clusterNameList[0],
     }
   },
   components: {
@@ -259,13 +268,14 @@ export default {
               "sAjaxSource" : "/singel_cell/server/search_ccm_list"
                               +"?username=" + self.$store.state.username
                               +"&p=" + self.$store.state.projectId
+                              +"&clusterName=" + self.clusterRadio
                               +"&geneId=" + (self.filterMethod === false ? self.geneId: '')
                               +"&pValueAdjStartA=" + (self.filterMethod === false ? '' :self.pValueAdjStartA)
                               +'&pValueAdjEndA=' + (self.filterMethod === false ? '' :self.pValueAdjEndA)
                               +"&pct1StartA=" + (self.filterMethod === false ? '' :self.pct1StartA)
                               +"&pct1EndA=" + (self.filterMethod === false ? '' :self.pct1EndA)
                               +"&pct2StartA=" + (self.filterMethod === false ? '' :self.pct2StartA)
-                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA) ,
+                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA),
               "rowCallback": function( row, data ) {
                 //  在当前页 选中 切换页面回来后 还是选中状态
                 if ( $.inArray(data.geneId, self.selected) !== -1 ) {

@@ -79,6 +79,8 @@ import {
   DatePicker,
   Carousel,
   CarouselItem,
+  RadioGroup,
+  RadioButton,
 } from 'element-ui';
 
 HighchartsMore(Highcharts)
@@ -126,6 +128,8 @@ Vue.use(Loading.directive);
 Vue.use(DatePicker);
 Vue.use(Carousel);
 Vue.use(CarouselItem);
+Vue.use(RadioGroup);
+Vue.use(RadioButton);
 
 Vue.prototype.$loading = Loading.service;
 Vue.prototype.$msgbox = MessageBox;

@@ -20,6 +20,28 @@
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
+        <el-select size="small" v-model="sampleValue" @change="selectChange">
+          <el-option
+            v-for="item in data.groupName"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
+
+        <el-button type="" size="mini" v-if="pauseBtnShow" @click="pause()">
+          <svg style="width:12px;height:12px" viewBox="0 0 24 24">
+              <path fill="#000000" d="M14,19H18V5H14M6,19H10V5H6V19Z" />
+          </svg>
+        </el-button>
+
+        <el-button type="" size="mini" v-if="!pauseBtnShow" @click="selectChange()">
+          <svg style="width:12px;height:12px" viewBox="0 0 24 24">
+              <path fill="#000000" d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+          </svg>
+        </el-button>
+
+
         <!-- <span v-show="splitShow">
           <el-button type="info" size="small" id="revokeBtn">撤销</el-button>
           <el-button type="info" size="small" id="resetBtn">重新选择</el-button>
@@ -110,7 +132,10 @@ export default {
       mergeGroupName: '',
       changeNameDialogShow: false, // 更改组名
       changeNameForm: {},
-      loading: false
+      loading: false,
+      sampleValue: '',
+      timer: '',
+      pauseBtnShow: true,
     }
   },
   components: {
@@ -128,33 +153,27 @@ export default {
     }
   },
   methods: {
-    aaa () {
-      let circles = d3.selectAll("circle").filter((d) => d === '0')
-
-      this.timer = setInterval(() => {
-        circles.transition()
-          .duration(2000)
-          .attr('r', 10)
-          .transition()
-          .duration(2000)
-          .attr('r', 8)
-      }, 4000)
-      // repeat ()
-      // function repeat() {
-        // circles
-        //   .attr('r', 8)
-        //   .transition()
-        //   .duration(2000)
-        //   .attr('r', 10)
-        //   .transition()
-        //   .duration(2000)
-        //   .attr('r', 8)
-        //   .on("end", repeat);
-      //   };
-
+    pause () {
+      if (this.sampleValue) {
+        window.clearInterval(this.timer)
+        this.pauseBtnShow = false
+      }
     },
-    bbb () {
+    selectChange () { // 选中的样本组的 circle 高亮
       window.clearInterval(this.timer)
+      this.pauseBtnShow = true
+      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[i] === this.sampleValue)
+
+      if (circles._groups[0].length !== 0) {
+        this.timer = setInterval(() => {
+          circles.transition()
+            .duration(2000)
+            .attr('r', 3)
+            .transition()
+            .duration(2000)
+            .attr('r', 1.5)
+        }, 4000)
+      }
     },
     initData () {
       this.loading = true
@@ -362,6 +381,7 @@ export default {
          .data(this.data.cellId)
          .enter()
          .append("circle")
+         .attr("class", "clusterCircle")
          .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
          .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
          .attr("r", 2)

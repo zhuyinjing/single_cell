@@ -2,8 +2,8 @@
   <div id="container">
     <h2>类间特征基因表达分析</h2>
     <p>决定细胞不同聚类之间的关键因素是基因表达差异，而基因表达差异又可以反映出不同聚类间的生物学差异。因此，基于tSNE聚类，可以进行深入的基因表达差异分析，并与生物学意义做关联。</p>
-    <el-tabs type="border-card" v-model="activeTab" v-show="violinSvgShow || heatmapSvgShow || scatterSvgShow">
-      <el-tab-pane label="VliPlot" style="max-height:550px;overflow:auto" name="violinSvgShow">
+    <el-tabs v-model="activeTab" v-show="violinSvgShow || heatmapSvgShow || scatterSvgShow">
+      <el-tab-pane style="overflow-x:auto" label="VliPlot" name="violinSvgShow">
         <div class="violin">
           <h3>特征基因表达值分布</h3>
           <p>如下所示，小提琴图展示了特征基因在不同tSNE聚类中的表达量分布。横坐标标识不同tSNE聚类，纵坐标表示基因的UMI数目，每个点代表一个细胞。</p>
@@ -16,7 +16,7 @@
         </div>
 
       </el-tab-pane>
-      <el-tab-pane label="FeaturePlot" style="max-height:550px;overflow:auto" name="scatterSvgShow">
+      <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
         <div class="scatter">
           <h3>特征基因表达值聚类图标记</h3>
           <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
@@ -28,7 +28,7 @@
           <div id="scatterContainer"></div>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="Heatmap" style="max-height:550px;overflow:auto" name="heatmapSvgShow">
+      <el-tab-pane style="overflow-x:auto" label="Heatmap" name="heatmapSvgShow">
         <div class="heatmap">
           <h3>特征基因群表达值热图</h3>
           <p>如下热图所示，每一列代表一个细胞，每一行代表一个特征基因，每一个色块代表相应基因在相应细胞中的表达量，紫色代表低表达量，黄色代表高表达量。每个细胞所属的聚类也被标记在热图的下方。基于这个结果，可以对决定不同聚类的特征基因群做功能富集分析。</p>
@@ -203,6 +203,11 @@ export default {
     $("#table").on("click", 'td input[type=checkbox]', function () {
       let checked = $(this).prop("checked")
       if (checked === true) {
+        if (self.selected.length === 2) { // 最多选中 2 个 gene
+          $(this).prop("checked", false)
+          self.$message.error("最多选择 2 个 gene！")
+          return
+        }
         self.selected.push(this.value)
         //  如果页面上的 checkbox 全选上了 将 checkall 赋值为 true
         // if ($(".checkchild:checked").length === self.currentData.length) {
@@ -435,7 +440,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#violinsvg').remove()
       }
-      let width = 600, height = 500 // 每个 g 标签的宽度/高度
+      let width = 600, height = 600 // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:60}
       let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
@@ -565,15 +570,6 @@ export default {
       let svgWidth = width * cellNumber + (padding.left + padding.right) * xData.length + yTextPadding
       let svgHeight = height * this.selected.length + padding.top + padding.bottom
       let heatmapsvg = d3.select("#heatmapContainer").append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", "heatmapsvg")
-      let tooltip = d3.select('#container')
-      	.append('div')
-      	.style('position', 'absolute')
-        .style('z-index', '10')
-      	.style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '12px')
-      	.style('font-weight', 'bold')
-      	.text('')
       let colorValueArr = [] // 把所有分组拼接到一起，为了求所有数据的最大值和最小值 当作 colorScale 的值域
       xData.map(item => {
         colorValueArr = colorValueArr.concat(this.heatmapData[item]['umiMatrixList'])
@@ -600,15 +596,6 @@ export default {
            .attr("width", width)
            .attr("height", height)
            .attr("fill", (d,i) => colorScale(d.umiValue))
-           // .on('mouseover', function (d, i) {
-           //    return tooltip.style('visibility', 'visible').text(d.umiValue)
-           //  })
-           //  .on('mousemove', function (d, i) {
-           //    return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-           //  })
-           //  .on('mouseout', function (d, i) {
-           //    return tooltip.style('visibility', 'hidden')
-           //  })
 
          // x 轴文字
          svg.append("text")
@@ -673,7 +660,7 @@ export default {
         // }
         return
       }
-      this.axios.get('singel_cell/server/get_gene_tsne_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',')).then((res) => {
+      this.axios.get('singel_cell/server/get_gene_tsne_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',') + '&clusterName=' + this.clusterRadio).then((res) => {
         if (res.data.message_type === 'success') {
           this.scatterData = res.data
           this.initScatter()
@@ -692,7 +679,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      let width = 600, height = 300 // 每个 g 标签的宽度/高度
+      let width = 800, height = 800 // 每个 g 标签的宽度/高度
       let padding = {top:50,right:80,bottom:40,left:60}
       let number = 2 // 一行显示几个图
       let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
@@ -702,7 +689,7 @@ export default {
         .style('z-index', '10')
       	.style('color', '#3497db')
         .style('visibility', 'hidden')
-        .style('font-size', '12px')
+        .style('font-size', '18px')
       	.style('font-weight', 'bold')
       	.text('')
       let tsneNum = this.scatterData.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
@@ -712,7 +699,7 @@ export default {
         let xData = this.scatterData[tsneNum[0]]
         let yData = this.scatterData[tsneNum[1]]
         let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的值，为了区别颜色的深浅
-        let colorScale = d3.scaleSequential(d3Chromatic.interpolatePurples).domain(d3.extent(colorValue))
+        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorValue)[0] - (d3.extent(colorValue)[1] - d3.extent(colorValue)[0]) / 10,d3.extent(colorValue)[1]])
 
         let xScale = d3.scaleLinear().domain(d3.extent(xData)).range([padding.left,width - padding.right]).nice()
         svg.append("g")
@@ -731,10 +718,10 @@ export default {
            .append("circle")
            .attr("cx", (d,i) => xScale(xData[i]))
            .attr("cy", (d,i) => yScale(yData[i]))
-           .attr("r", 2.5)
+           .attr("r", 1.5)
            .attr("fill", (d,i) => colorScale(colorValue[i]))
            .on('mouseover', function (d, i) {
-               return tooltip.style('visibility', 'visible').text(self.scatterData.cellId[i])
+               return tooltip.style('visibility', 'visible').text(colorValue[i])
              })
              .on('mousemove', function (d, i) {
                return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')

@@ -20,14 +20,29 @@
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
-        <!-- <el-select v-model="sampleValue" @change="selectChange">
+        <el-select size="small" v-model="sampleValue" @change="selectChange">
           <el-option
             v-for="item in data.groupName"
             :key="item.groupName"
             :label="item.groupName"
             :value="item.groupName">
           </el-option>
-        </el-select> -->
+        </el-select>
+
+        <el-button type="" size="mini" v-if="pauseBtnShow" @click="pause()">
+          <svg style="width:12px;height:12px" viewBox="0 0 24 24">
+              <path fill="#000000" d="M14,19H18V5H14M6,19H10V5H6V19Z" />
+          </svg>
+        </el-button>
+
+        <el-button type="" size="mini" v-if="!pauseBtnShow" @click="selectChange()">
+          <svg style="width:12px;height:12px" viewBox="0 0 24 24">
+              <path fill="#000000" d="M8,5.14V19.14L19,12.14L8,5.14Z" />
+          </svg>
+        </el-button>
+
+
+
 
         <!-- <span v-show="splitShow">
           <el-button type="info" size="small" id="revokeBtn">撤销</el-button>
@@ -122,6 +137,7 @@ export default {
       loading: false,
       sampleValue: '',
       timer: '',
+      pauseBtnShow: true,
     }
   },
   components: {
@@ -139,18 +155,27 @@ export default {
     }
   },
   methods: {
+    pause () {
+      if (this.sampleValue) {
+        window.clearInterval(this.timer)
+        this.pauseBtnShow = false
+      }
+    },
     selectChange () { // 选中的样本组的 circle 高亮
       window.clearInterval(this.timer)
+      this.pauseBtnShow = true
       let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[i] === this.sampleValue)
 
-      this.timer = setInterval(() => {
-        circles.transition()
-          .duration(2000)
-          .attr('r', 3)
-          .transition()
-          .duration(2000)
-          .attr('r', 1.5)
-      }, 4000)
+      if (circles._groups[0].length !== 0) {
+        this.timer = setInterval(() => {
+          circles.transition()
+            .duration(2000)
+            .attr('r', 3)
+            .transition()
+            .duration(2000)
+            .attr('r', 1.5)
+        }, 4000)
+      }
     },
     initData () {
       this.loading = true

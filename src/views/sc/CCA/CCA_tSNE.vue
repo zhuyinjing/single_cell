@@ -143,11 +143,15 @@ export default {
   components: {
   },
   mounted() {
+    if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
+      this.getDBdata()
+    } else {
+      this.initData()
+    }
     Array.prototype.equals = function(arr)
     {
         return this.sort().join() === arr.sort().join()
     }
-    this.initData()
   },
   destroyed () {
     if (this.message) {
@@ -155,6 +159,19 @@ export default {
     }
   },
   methods: {
+    getDBdata () {
+      let result = indexedDB.open('deg')
+      result.onsuccess = (e) => {
+        let db = e.target.result
+        var transaction = db.transaction('degTable');
+        var objectStore = transaction.objectStore('degTable');
+        var request = objectStore.get('commonInfo' + this.$store.state.projectId)
+        request.onsuccess = (e) => {
+          this.$store.commit('setcommonInfo', e.target.result.value)
+          this.initData()
+        }
+      }
+    },
     pause () {
       if (this.sampleValue) {
         window.clearInterval(this.timer)
@@ -269,8 +286,7 @@ export default {
       let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
       let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-      let xText = this.data.tsneNumList.tsneNum[0]
-      let yText = this.data.tsneNumList.tsneNum[1]
+      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
       let tooltip = d3.select('#container')
         .append('div')
         .style('position', 'absolute')
@@ -283,10 +299,10 @@ export default {
 
       let symbol = d3.symbol().size([50])
 
-      let xScale = d3.scaleLinear().domain(d3.extent(this.data.tSNE_1)).range([0,width - padding.left - padding.right]).nice()
+      let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
       svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
 
-      let yScale = d3.scaleLinear().domain(d3.extent(this.data.tSNE_2)).range([height - padding.top - padding.bottom,0]).nice()
+      let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
       svg.append("g").call(d3.axisLeft(yScale))
 
       //  上边 和 右边 两侧的 line
@@ -294,11 +310,11 @@ export default {
       svg.append("line").attr("x1", width-padding.right-padding.left).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",height-padding.top-padding.bottom).attr("stroke","black").attr("stroke-width","1px")
 
       svg.selectAll(".cicle")
-         .data(this.data.cellId)
+         .data(this.$store.state.commonInfo.cellId)
          .enter()
          .append("circle")
-         .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
-         .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
+         .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
+         .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
          .attr("r", 1.5)
          .attr("fill", (d,i) => colorScale(self.data.sampleId[i]))
          .on('mouseover', function (d, i) {
@@ -360,8 +376,7 @@ export default {
       let clusterSvg = d3.select("#clusterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
-      let xText = this.data.tsneNumList.tsneNum[0]
-      let yText = this.data.tsneNumList.tsneNum[1]
+      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
       let sampleArr = Array.from(new Set(this.data.sampleId)).sort()
       let tooltip = d3.select('#container')
         .append('div')
@@ -373,19 +388,19 @@ export default {
         .style('font-weight', 'bold')
         .text('')
 
-      let xScale = d3.scaleLinear().domain(d3.extent(this.data.tSNE_1)).range([0,width - padding.left - padding.right]).nice()
+      let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
       svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
 
-      let yScale = d3.scaleLinear().domain(d3.extent(this.data.tSNE_2)).range([height - padding.top - padding.bottom,0]).nice()
+      let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
       svg.append("g").call(d3.axisLeft(yScale))
 
       svg.selectAll(".cicle")
-         .data(this.data.cellId)
+         .data(this.$store.state.commonInfo.cellId)
          .enter()
          .append("circle")
          .attr("class", "clusterCircle")
-         .attr("cx", (d,i) => xScale(self.data.tSNE_1[i]))
-         .attr("cy", (d,i) => yScale(self.data.tSNE_2[i]))
+         .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
+         .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
          .attr("r", 1.5)
          .attr("fill", (d,i) => colorScale(self.data.clusterId[i]))
          .on('mouseover', function (d, i) {

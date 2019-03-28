@@ -113,7 +113,7 @@
 
       </div>
 
-      <div style="margin-top: 20px">
+      <div style="margin-top: 20px" v-if="$store.state.commonInfo">
         请选择显示的 cluster：
         <el-radio-group v-model="clusterRadio" size="mini" @change="filter">
           <el-radio-button v-for="item in $store.state.commonInfo.clusterNameList" :key="item" :label="item"></el-radio-button>
@@ -175,13 +175,18 @@ export default {
       filterMethod: false,
       activeTab: 'violinSvgShow',
       sample: [],
-      clusterRadio: this.$store.state.commonInfo.clusterNameList[0],
+      clusterRadio: null,
     }
   },
   components: {
   },
   mounted() {
-    this.getTableHead()
+    if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
+      this.getDBdata()
+    } else {
+      this.clusterRadio = this.$store.state.commonInfo.clusterNameList[0]
+      this.getTableHead()
+    }
 
     //  给动态生成的 checkbox 绑定 click 事件，只需要绑定一次
     let self = this
@@ -222,6 +227,20 @@ export default {
     })
   },
   methods: {
+    getDBdata () {
+      let result = indexedDB.open('deg')
+      result.onsuccess = (e) => {
+        let db = e.target.result
+        var transaction = db.transaction('degTable');
+        var objectStore = transaction.objectStore('degTable');
+        var request = objectStore.get('commonInfo' + this.$store.state.projectId)
+        request.onsuccess = (e) => {
+          this.$store.commit('setcommonInfo', e.target.result.value)
+          this.clusterRadio = this.$store.state.commonInfo.clusterNameList[0]
+          this.getTableHead()
+        }
+      }
+    },
     // 科学计数法
     num2e (num) {
       var p = Math.floor(Math.log(num) / Math.LN10)
@@ -692,12 +711,11 @@ export default {
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
       	.text('')
-      let tsneNum = this.scatterData.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
+      let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
 
       for (let i = 0;i < this.selected.length;i++) {
         let svg = scattersvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
-        let xData = this.scatterData[tsneNum[0]]
-        let yData = this.scatterData[tsneNum[1]]
+        let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
         let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的值，为了区别颜色的深浅
         let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorValue)[0] - (d3.extent(colorValue)[1] - d3.extent(colorValue)[0]) / 10,d3.extent(colorValue)[1]])
 

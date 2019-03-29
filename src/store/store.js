@@ -50,70 +50,70 @@ export default new Vuex.Store({
   },
   mutations: {
     setusername: (state, data) => {
-      sessionStorage.setItem('username', data)
+      localStorage.setItem('username', data)
       state.username = data
     },
     setprojectId: (state, data) => {
-      sessionStorage.setItem('projectId', data)
+      localStorage.setItem('projectId', data)
       state.projectId = data
     },
     setprojectName: (state, data) => {
-      sessionStorage.setItem('projectName', data)
+      localStorage.setItem('projectName', data)
       state.projectName = data
     },
     setgeneList: (state, data) => {
-      sessionStorage.setItem('geneList', JSON.stringify(data))
+      localStorage.setItem('geneList', JSON.stringify(data))
       state.geneList = data
     },
     setheatmapJson: (state, data) => {
-      sessionStorage.setItem('heatmapJson', JSON.stringify(data))
+      localStorage.setItem('heatmapJson', JSON.stringify(data))
       state.heatmapJson = data
     },
     setppiJson: (state, data) => {
-      sessionStorage.setItem('ppiJson', JSON.stringify(data))
+      localStorage.setItem('ppiJson', JSON.stringify(data))
       state.ppiJson = data
     },
     setleftMenuIndex: (state, data) => {
-      sessionStorage.setItem('leftMenuIndex', data)
+      localStorage.setItem('leftMenuIndex', data)
       state.leftMenuIndex = data
     },
     setinfo: (state, data) => {
-      sessionStorage.setItem('info', JSON.stringify(data))
+      localStorage.setItem('info', JSON.stringify(data))
       state.info = data
     },
     set_case: (state, data) => {
-      sessionStorage.setItem('_case', data)
+      localStorage.setItem('_case', data)
       state._case = data
     },
     set_control: (state, data) => {
-      sessionStorage.setItem('_control', data)
+      localStorage.setItem('_control', data)
       state._control = data
     },
     setspecies: (state, data) => {
-      sessionStorage.setItem('species', data)
+      localStorage.setItem('species', data)
       state.species = data
     },
     setchecked: (state, data) => {
       state.checked = data
     },
     setdegGeneSum: (state, data) => {
-      sessionStorage.setItem('degGeneSum', data)
+      localStorage.setItem('degGeneSum', data)
       state.degGeneSum = data
     },
     setdegFilterArgs: (state, data) => {
-      sessionStorage.setItem('degFilterArgs', JSON.stringify(data))
+      localStorage.setItem('degFilterArgs', JSON.stringify(data))
       state.degFilterArgs = data
     },
     setmenuShow: (state, data) => {
-      sessionStorage.setItem('menuShow', data)
+      localStorage.setItem('menuShow', data)
       state.menuShow = data
     },
     setappmenuShow: (state, data) => {
-      sessionStorage.setItem('appmenuShow', data)
+      localStorage.setItem('appmenuShow', data)
       state.appmenuShow = data
     },
     setprojectType: (state, data) => {
-      sessionStorage.setItem('projectType', data)
+      localStorage.setItem('projectType', data)
       state.projectType = data
     },
     setcommonInfo: (state, data) => {

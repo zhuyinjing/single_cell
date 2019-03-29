@@ -36,7 +36,6 @@ export default {
       })
     }
     request.onsuccess = (e) => {
-      console.log("success!");
       this.db = e.target.result
       var tx = this.db.transaction(['degTable'], 'readwrite');
       var store = tx.objectStore('degTable');
@@ -62,9 +61,7 @@ export default {
               }
             }
           })
-        } else {
-          this.$store.commit('setcommonInfo', degData.value)
-        }
+        } 
         this.loading = false
       }
     }

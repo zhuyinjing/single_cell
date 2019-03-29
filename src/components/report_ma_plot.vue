@@ -175,8 +175,8 @@ export default {
       this.getData()
     },
     getData () {
-      let _case = sessionStorage.getItem('_case')
-      let _control = sessionStorage.getItem('_control')
+      let _case = localStorage.getItem('_case')
+      let _control = localStorage.getItem('_control')
       this.axios.get('/server/ma_data?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&_case=' + _case + '&_control=' + _control + '&gene_num=' + this.showNum).then((res) => {
         if (res.data.length > 0) {
           res.data = res.data.slice(1)

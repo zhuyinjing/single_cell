@@ -157,58 +157,58 @@ Vue.prototype.$message = Message;
 //   console.log("error!");
 // }
 
-if (sessionStorage.username) {
-  store.state.username = sessionStorage.username
+if (localStorage.username) {
+  store.state.username = localStorage.username
 }
-if (sessionStorage.projectId) {
-  store.state.projectId = sessionStorage.projectId
+if (localStorage.projectId) {
+  store.state.projectId = localStorage.projectId
 }
-if (sessionStorage.projectName) {
-  store.state.projectName = sessionStorage.projectName
+if (localStorage.projectName) {
+  store.state.projectName = localStorage.projectName
 }
 // 侧边栏li的点击颜色
-if (sessionStorage.leftMenuIndex) {
-  store.state.leftMenuIndex = sessionStorage.leftMenuIndex
+if (localStorage.leftMenuIndex) {
+  store.state.leftMenuIndex = localStorage.leftMenuIndex
 }
 // 侧边栏动态内容
-if (sessionStorage.info) {
-  store.state.info = JSON.parse(sessionStorage.info)
+if (localStorage.info) {
+  store.state.info = JSON.parse(localStorage.info)
 }
 // heatmap,ppi, geneList 输入
-if (sessionStorage.geneList) {
-  store.state.geneList = JSON.parse(sessionStorage.geneList)
+if (localStorage.geneList) {
+  store.state.geneList = JSON.parse(localStorage.geneList)
 }
 // heatmap json
-if (sessionStorage.heatmapJson) {
-  store.state.heatmapJson = JSON.parse(sessionStorage.heatmapJson)
+if (localStorage.heatmapJson) {
+  store.state.heatmapJson = JSON.parse(localStorage.heatmapJson)
 }
 // ppi json
-if (sessionStorage.ppiJson) {
-  store.state.ppiJson = JSON.parse(sessionStorage.ppiJson)
+if (localStorage.ppiJson) {
+  store.state.ppiJson = JSON.parse(localStorage.ppiJson)
 }
-if (sessionStorage._case) {
-  store.state._case = sessionStorage._case
+if (localStorage._case) {
+  store.state._case = localStorage._case
 }
-if (sessionStorage._control) {
-  store.state._control = sessionStorage._control
+if (localStorage._control) {
+  store.state._control = localStorage._control
 }
-if (sessionStorage.species) {
-  store.state.species = sessionStorage.species
+if (localStorage.species) {
+  store.state.species = localStorage.species
 }
-if (sessionStorage.degGeneSum) {
-  store.state.degGeneSum = sessionStorage.degGeneSum
+if (localStorage.degGeneSum) {
+  store.state.degGeneSum = localStorage.degGeneSum
 }
-if (sessionStorage.degFilterArgs) {
-  store.state.degFilterArgs = JSON.parse(sessionStorage.degFilterArgs)
+if (localStorage.degFilterArgs) {
+  store.state.degFilterArgs = JSON.parse(localStorage.degFilterArgs)
 }
-if (sessionStorage.menuShow) {
-  store.state.menuShow = JSON.parse(sessionStorage.menuShow)
+if (localStorage.menuShow) {
+  store.state.menuShow = JSON.parse(localStorage.menuShow)
 }
-if (sessionStorage.appmenuShow) {
-  store.state.appmenuShow = JSON.parse(sessionStorage.appmenuShow)
+if (localStorage.appmenuShow) {
+  store.state.appmenuShow = JSON.parse(localStorage.appmenuShow)
 }
-if (sessionStorage.projectType) {
-  store.state.projectType = sessionStorage.projectType
+if (localStorage.projectType) {
+  store.state.projectType = localStorage.projectType
 }
 
 axios.get('/getUser').then((res) => {

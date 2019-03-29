@@ -36,7 +36,7 @@ export default {
   components: {
   },
   mounted() {
-    this.axios.get('singel_cell/server/get_viz_pca?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+    this.axios.get('singel_cell/server/get_viz_pca?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
       if (res.data.message_type === 'success') {
         this.pcList = res.data.analysisNumList.analysisNum
         this.pcArr = this.pcList.slice(0,10)
@@ -48,7 +48,7 @@ export default {
   },
   methods: {
     getData () {
-      this.axios.get('singel_cell/server/get_viz_pca?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&pcNum='+ this.pcArr.join(',')).then((res) => {
+      this.axios.get('singel_cell/server/get_viz_pca?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&analysisNum='+ this.pcArr.join(',')).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
           this.initScatterPlot()

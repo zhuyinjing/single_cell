@@ -224,8 +224,8 @@ export default {
         })
     },
     getdegList() {
-      let _case = sessionStorage.getItem('_case')
-      let _control = sessionStorage.getItem('_control')
+      let _case = localStorage.getItem('_case')
+      let _control = localStorage.getItem('_control')
       let dbName = "deg"
       var request = indexedDB.open(dbName)
       request.onerror = (e) => {}

@@ -108,8 +108,8 @@ export default {
         geneList = this.textareaGeneName
         infoType = 2
       }
-      sessionStorage.setItem('geneInfo', geneList)
-      sessionStorage.setItem('infoType', infoType)
+      localStorage.setItem('geneInfo', geneList)
+      localStorage.setItem('infoType', infoType)
       // 正则 替换 逗号 空格 为 换行
       this.textareaGeneId = this.textareaGeneId.replace(/(\,|\s)+/g, '\n')
       this.loading = this.$loading({

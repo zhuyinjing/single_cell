@@ -620,7 +620,7 @@ export default {
       }
       let width = 800, height = 800 // 每个 g 标签的宽度/高度
       let padding = {top:50,right:80,bottom:40,left:60}
-      let number = 2 // 一行显示几个图
+      let number = this.selected.length // 一行显示几个图
       let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
       let tooltip = d3.select('#container')
       	.append('div')
@@ -637,7 +637,8 @@ export default {
         let svg = scattersvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
         let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
         let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的值，为了区别颜色的深浅
-        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain(d3.extent(colorValue))
+        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorValue)[0] - (d3.extent(colorValue)[1] - d3.extent(colorValue)[0]) / 5,d3.extent(colorValue)[1]])
+        // let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain(d3.extent(colorValue))
 
         let xScale = d3.scaleLinear().domain(d3.extent(xData)).range([padding.left,width - padding.right]).nice()
         svg.append("g")

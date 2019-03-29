@@ -123,8 +123,8 @@ export default {
       });
     },
     getTabelValue () {
-      let _case = sessionStorage.getItem('_case')
-      let _control = sessionStorage.getItem('_control')
+      let _case = localStorage.getItem('_case')
+      let _control = localStorage.getItem('_control')
       this.axios.get('/server/deg?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&_case=' + _case + '&_control=' + _control + '&sig_only=true').then((res) => {
         if (res.data.message_type === 'success') {
           for (let i = 0;i < res.data.message.data.length;i++) {

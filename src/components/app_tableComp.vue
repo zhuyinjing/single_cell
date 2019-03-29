@@ -69,8 +69,8 @@ export default {
     getTabelValue () {
       let formData = new FormData()
       formData.append('username', this.$store.state.username)
-      formData.append('infoType', sessionStorage.infoType)
-      formData.append('geneInfo', sessionStorage.geneInfo)
+      formData.append('infoType', localStorage.infoType)
+      formData.append('geneInfo', localStorage.geneInfo)
       formData.append('speciesId', this.$store.state.species)
       this.axios.post('/server/get_gene_info_entity', formData).then((res) => {
         this.initTable(res.data)

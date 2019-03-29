@@ -89,8 +89,8 @@ export default {
       }
       // 正则 替换 逗号 空格 为 换行
       this.textareaGeneId = this.textareaGeneId.replace(/(\,|\s)+/g, '\n')
-      sessionStorage.setItem('geneInfo', this.textareaGeneId)
-      sessionStorage.setItem('infoType', 1)
+      localStorage.setItem('geneInfo', this.textareaGeneId)
+      localStorage.setItem('infoType', 1)
       this.loading = this.$loading({
         lock: true,
         text: '文件正在上传中...请稍等...可能需要等待1分钟左右的时间...',

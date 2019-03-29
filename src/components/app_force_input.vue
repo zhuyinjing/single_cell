@@ -69,8 +69,8 @@ export default {
         return
       }
       this.textareaGeneId = this.textareaGeneId.replace(/(\,|\s)+/g, '\n')
-      sessionStorage.setItem('geneInfo', this.textareaGeneId)
-      sessionStorage.setItem('infoType', 1)
+      localStorage.setItem('geneInfo', this.textareaGeneId)
+      localStorage.setItem('infoType', 1)
       this.loading = this.$loading({
         lock: true,
         text: '列表正在处理中...请稍等...',

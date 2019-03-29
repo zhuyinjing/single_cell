@@ -37,10 +37,10 @@ export default {
     if (localStorage.language) {
       this.language = localStorage.language === 'zh'? '中文' : 'English'
     }
-    if (!sessionStorage.navbarItem) {
+    if (!localStorage.navbarItem) {
       this.activeIndex = 'home'
     } else {
-      this.activeIndex = sessionStorage.navbarItem
+      this.activeIndex = localStorage.navbarItem
     }
     bus.$on("handleSelect", (key) => {
       this.handleSelect(key)
@@ -62,29 +62,29 @@ export default {
       switch (key) {
         case 'home':
           this.activeIndex = 'home'
-          sessionStorage.setItem('navbarItem', 'home')
+          localStorage.setItem('navbarItem', 'home')
           this.$router.push({
             'path': '/'
           })
           break
         case 'project':
-          sessionStorage.clear()
+          localStorage.clear()
           this.activeIndex = 'project'
-          sessionStorage.setItem('navbarItem', 'project')
+          localStorage.setItem('navbarItem', 'project')
           this.$router.push({
             'name': 'project_list'
           })
           break
         case 'app_heatmap_input':
           this.activeIndex = 'app_heatmap_input'
-          sessionStorage.setItem('navbarItem', 'app_heatmap_input')
+          localStorage.setItem('navbarItem', 'app_heatmap_input')
           this.$router.push({
             'name': 'app_heatmap_input'
           })
           break
         case 'admin_project_list':
           this.activeIndex = 'admin_project_list'
-          sessionStorage.setItem('navbarItem', 'admin_project_list')
+          localStorage.setItem('navbarItem', 'admin_project_list')
           this.$router.push({
             'path': '/admin'
           })
@@ -98,7 +98,7 @@ export default {
         type: 'warning',
         center: true
       }).then(() => {
-        sessionStorage.removeItem('navbarItem')
+        localStorage.removeItem('navbarItem')
         window.location.href = 'https://colorseq.com/logout'
       }).catch(() => {});
     },

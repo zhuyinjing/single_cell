@@ -409,8 +409,8 @@ export default {
       });
     },
     getTabelValue() {
-      let _case = sessionStorage.getItem('_case')
-      let _control = sessionStorage.getItem('_control')
+      let _case = localStorage.getItem('_case')
+      let _control = localStorage.getItem('_control')
       this.tableLoading = true
 
       let dbName = "deg"

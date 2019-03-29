@@ -200,8 +200,8 @@ export default {
         return
       }
       this.textareaMatrix = this.textareaMatrix.replace(/(\,|\s)+/g, '\n')
-      sessionStorage.setItem('geneInfo', this.textareaMatrix)
-      sessionStorage.setItem('infoType', 1)
+      localStorage.setItem('geneInfo', this.textareaMatrix)
+      localStorage.setItem('infoType', 1)
       this.loading = this.$loading({
         lock: true,
         text: '文件正在上传中...请稍等...',

@@ -700,7 +700,7 @@ export default {
       }
       let width = 800, height = 800 // 每个 g 标签的宽度/高度
       let padding = {top:50,right:80,bottom:40,left:60}
-      let number = 2 // 一行显示几个图
+      let number = this.selected.length // 一行显示几个图
       let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
       let tooltip = d3.select('#container')
       	.append('div')

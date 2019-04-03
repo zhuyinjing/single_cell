@@ -1,7 +1,6 @@
 <template>
   <div id="container">
-    <h2>类间特征基因表达分析</h2>
-    <p>决定细胞不同聚类之间的关键因素是基因表达差异，而基因表达差异又可以反映出不同聚类间的生物学差异。因此，基于tSNE聚类，可以进行深入的基因表达差异分析，并与生物学意义做关联。</p>
+    <h2>聚类内部不同样本组间差异表达基因</h2>
     <el-tabs v-model="activeTab" v-show="violinSvgShow || heatmapSvgShow || scatterSvgShow">
       <el-tab-pane style="overflow-x:auto" label="VliPlot" name="violinSvgShow">
         <div class="violin">
@@ -72,41 +71,22 @@
       </div>
       <div v-show="filterMethod" style="margin-top:10px">
           <div class="labelStyle">
-            <label class="radio-inline control-label">pValAdj{{sample[0]}} from</label>
+            <label class="radio-inline control-label">pValAdj from</label>
           </div>
-         <el-input style="width: 80px;" size='mini' v-model="pValueAdjStartA"></el-input>
-        to  <el-input style="width: 80px;" size='mini' v-model="pValueAdjEndA"></el-input>
+         <el-input style="width: 80px;" size='mini' v-model="pValueAdjStart"></el-input>
+        to  <el-input style="width: 80px;" size='mini' v-model="pValueAdjEnd"></el-input>
 
           <div class="labelStyle">
-            <label class="radio-inline control-label">pct1{{sample[0]}} from</label>
+            <label class="radio-inline control-label">pct{{sample[0]}} from</label>
           </div>
-          <el-input style="width: 80px;" size='mini' v-model="pct1StartA"></el-input>
-        to <el-input style="width: 80px;" size='mini' v-model="pct1EndA"></el-input>
+          <el-input style="width: 80px;" size='mini' v-model="pctAStart"></el-input>
+        to <el-input style="width: 80px;" size='mini' v-model="pctAEnd"></el-input>
 
           <div class="labelStyle">
-            <label class="radio-inline control-label">pct2{{sample[0]}} from</label>
+            <label class="radio-inline control-label">pct{{sample[1]}} from</label>
           </div>
-          <el-input style="width: 80px;" size='mini' v-model="pct2StartA"></el-input>
-        to <el-input style="width: 80px;" size='mini' v-model="pct2EndA"></el-input>
-
-        <br>
-        <div class="labelStyle">
-          <label class="radio-inline control-label">pValAdj{{sample[1]}} from</label>
-        </div>
-       <el-input style="width: 80px;" size='mini' v-model="pValueAdjStartB"></el-input>
-      to  <el-input style="width: 80px;" size='mini' v-model="pValueAdjEndB"></el-input>
-
-        <div class="labelStyle">
-          <label class="radio-inline control-label">pct1{{sample[1]}} from</label>
-        </div>
-        <el-input style="width: 80px;" size='mini' v-model="pct1StartB"></el-input>
-      to <el-input style="width: 80px;" size='mini' v-model="pct1EndB"></el-input>
-
-        <div class="labelStyle">
-          <label class="radio-inline control-label">pct2{{sample[1]}} from</label>
-        </div>
-        <el-input style="width: 80px;" size='mini' v-model="pct2StartB"></el-input>
-      to <el-input style="width: 80px;" size='mini' v-model="pct2EndB"></el-input>
+          <el-input style="width: 80px;" size='mini' v-model="pctBStart"></el-input>
+        to <el-input style="width: 80px;" size='mini' v-model="pctBEnd"></el-input>
 
         <el-button type="primary" @click="filter()" size='mini'>{{$t('button.filter')}}</el-button>
         <el-button type="info" @click="clear()" size='mini'>{{$t('button.clear')}}</el-button>
@@ -122,6 +102,10 @@
 
       <br>
 
+      <div id="test">
+
+      </div>
+
     <div class="">
       <table id="table" cellspacing="0" width="100%" class="display table table-striped table-bordered">
           <thead>
@@ -130,11 +114,10 @@
               <th></th>
               <th>geneId</th>
               <th>geneName</th>
-              <th v-for="item in sample">avgLogFC{{item}}</th>
-              <th v-for="item in sample">pValAdj{{item}}</th>
-              <th v-for="item in sample">pValue{{item}}</th>
-              <th v-for="item in sample">pct1{{item}}</th>
-              <th v-for="item in sample">pct2{{item}}</th>
+              <th>avgLogFC</th>
+              <th>pValAdj</th>
+              <th>pValue</th>
+              <th v-for="item in sample">pct{{item}}</th>
             </tr>
           </thead>
       </table>
@@ -151,18 +134,12 @@ export default {
   data() {
     return {
       geneId: '',
-      pValueAdjStartA: '',
-      pValueAdjEndA: '',
-      pct1StartA: '',
-      pct1EndA: '',
-      pct2StartA: '',
-      pct2EndA: '',
-      pValueAdjStartB: '',
-      pValueAdjEndB: '',
-      pct1StartB: '',
-      pct1EndB: '',
-      pct2StartB: '',
-      pct2EndB: '',
+      pValueAdjStart: '',
+      pValueAdjEnd: '',
+      pctAStart: '',
+      pctAEnd: '',
+      pctBStart: '',
+      pctBEnd: '',
       violinSvgShow: false,
       data: [],
       table: null,
@@ -181,6 +158,7 @@ export default {
   components: {
   },
   mounted() {
+    // this.test()
     if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
       this.getDBdata()
     } else {
@@ -227,6 +205,105 @@ export default {
     })
   },
   methods: {
+    test () {
+      // let formData = new FormData()
+      // formData.append("username", this.$store.state.username)
+      // formData.append("p", this.$store.state.projectId)
+      // formData.append("geneId", "ENSMUSG00000001985")
+      // this.axios.post('/singel_cell/server/get_inner_comparison_circle', formData).then(res => {
+      //
+      // })
+      this.axios.get('/singel_cell/server/get_inner_comparison_tsne_score?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&clusterName=' + '0' + '&geneId=' + 'ENSMUSG00000001985,ENSMUSG00000003545').then(res => {
+        console.log(res.data);
+      })
+      var width = 960,
+          size = 230,
+          padding = 20;
+
+      var x = d3.scaleLinear()
+          .range([padding / 2, size - padding / 2]);
+
+      var y = d3.scaleLinear()
+          .range([size - padding / 2, padding / 2]);
+
+      var xAxis = d3.axisBottom()
+          .scale(x)
+          .ticks(6);
+
+      var yAxis = d3.axisLeft()
+          .scale(y)
+          .ticks(6);
+
+      var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+      d3.csv("/static/flowers.csv", function(error, data) {
+        if (error) throw error;
+
+        var domainByTrait = {},
+            traits = d3.keys(data[0]).filter(function(d) { return d !== "species"; }),
+            n = traits.length;
+
+        traits.forEach(function(trait) {
+          domainByTrait[trait] = d3.extent(data, function(d) { return d[trait]; });
+        });
+
+        var svg = d3.select("#test").append("svg")
+            .attr("width", size * n + padding)
+            .attr("height", size * n + padding)
+          .append("g")
+            .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
+
+        svg.selectAll(".x.axis")
+            .data(traits)
+          .enter().append("g")
+            .attr("class", "x axis")
+            .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * size + ","+  (n * size - 10)+")"; })
+            .each(function(d) { x.domain(domainByTrait[d]); d3.select(this).call(xAxis); });
+
+        svg.selectAll(".y.axis")
+            .data(traits)
+          .enter().append("g")
+            .attr("class", "y axis")
+            .attr("transform", function(d, i) { return "translate(10," + i * size + ")"; })
+            .each(function(d) { y.domain(domainByTrait[d]); d3.select(this).call(yAxis); });
+
+        var cell = svg.selectAll(".cell")
+            .data(cross(traits, traits))
+          .enter().append("g")
+            .attr("class", "cell")
+            .attr("transform", function(d) {return "translate(" + (n - d.i - 1) * size + "," + d.j * size + ")"; })
+            .each(plot);
+
+        function plot(p) {
+          var cell = d3.select(this);
+
+          cell.append("rect")
+              .attr("class", "frame")
+              .attr("x", padding / 2)
+              .attr("y", padding / 2)
+              .attr("width", size - padding)
+              .attr("height", size - padding)
+              .attr("fill", "none")
+              .attr("stroke", "black")
+
+          cell.selectAll("circle")
+              .data(data)
+            .enter().append("circle")
+              .attr("cx", function(d) { return x(d['petal length']); })
+              .attr("cy", function(d) { return y(d['petal length']); })
+              .attr("r", 4)
+              .style("fill", function(d) { return color(d.species); });
+        }
+
+
+      });
+
+      function cross(a, b) {
+        var c = [], n = a.length, m = b.length, i, j;
+        for (i = -1; ++i < n;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
+        return c;
+      }
+    },
     getDBdata () {
       let result = indexedDB.open('deg')
       result.onsuccess = (e) => {
@@ -266,18 +343,12 @@ export default {
     },
     clear () {
       this.geneId = ''
-      this.pValueAdjStartA = ''
-      this.pValueAdjEndA = ''
-      this.pct1StartA = ''
-      this.pct1EndA = ''
-      this.pct2StartA = ''
-      this.pct2EndA = ''
-      this.pValueAdjStartB = ''
-      this.pValueAdjEndB = ''
-      this.pct1StartB = ''
-      this.pct1EndB = ''
-      this.pct2StartB = ''
-      this.pct2EndB = ''
+      this.pValueAdjStart = ''
+      this.pValueAdjEnd = ''
+      this.pctAStart = ''
+      this.pctAEnd = ''
+      this.pctBStart = ''
+      this.pctBEnd = ''
     },
     getTableHead () {
       let form = new FormData()
@@ -286,7 +357,7 @@ export default {
       form.append('sEcho', 1)
       form.append('iDisplayStart', 0)
       form.append('iDisplayLength', 1)
-      this.axios.post('/singel_cell/server/search_ccm_list', form).then(res => {
+      this.axios.post('/singel_cell/server/search_cic_list', form).then(res => {
         if (res.data.message_type = 'success') {
           this.sample = Object.values(res.data.aData[0].sampleKey)
           this.initTable()
@@ -339,23 +410,17 @@ export default {
                 "sProcessing": "loading data..."
                },
               //通过ajax实现分页的url路径
-              "sAjaxSource" : "/singel_cell/server/search_ccm_list"
+              "sAjaxSource" : "/singel_cell/server/search_cic_list"
                               +"?username=" + self.$store.state.username
                               +"&p=" + self.$store.state.projectId
                               +"&clusterName=" + self.clusterRadio
                               +"&geneId=" + (self.filterMethod === false ? self.geneId: '')
-                              +"&pValueAdjStartA=" + (self.filterMethod === false ? '' :self.pValueAdjStartA)
-                              +'&pValueAdjEndA=' + (self.filterMethod === false ? '' :self.pValueAdjEndA)
-                              +"&pct1StartA=" + (self.filterMethod === false ? '' :self.pct1StartA)
-                              +"&pct1EndA=" + (self.filterMethod === false ? '' :self.pct1EndA)
-                              +"&pct2StartA=" + (self.filterMethod === false ? '' :self.pct2StartA)
-                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA)
-                              +"&pValueAdjStartB=" + (self.filterMethod === false ? '' :self.pValueAdjStartB)
-                              +'&pValueAdjEndB=' + (self.filterMethod === false ? '' :self.pValueAdjEndB)
-                              +"&pct1StartB=" + (self.filterMethod === false ? '' :self.pct1StartB)
-                              +"&pct1EndB=" + (self.filterMethod === false ? '' :self.pct1EndB)
-                              +"&pct2StartB=" + (self.filterMethod === false ? '' :self.pct2StartB)
-                              +"&pct2EndB=" + (self.filterMethod === false ? '' :self.pct2EndB),
+                              +"&pValueAdjStart=" + (self.filterMethod === false ? '' :self.pValueAdjStart)
+                              +'&pValueAdjEnd=' + (self.filterMethod === false ? '' :self.pValueAdjEnd)
+                              +"&pctAStart=" + (self.filterMethod === false ? '' :self.pctAStart)
+                              +"&pctAEnd=" + (self.filterMethod === false ? '' :self.pctAEnd)
+                              +"&pctBStart=" + (self.filterMethod === false ? '' :self.pctBStart)
+                              +"&pctBEnd=" + (self.filterMethod === false ? '' :self.pctBEnd),
               "rowCallback": function( row, data ) {
                 //  在当前页 选中 切换页面回来后 还是选中状态
                 if ( $.inArray(data.geneId, self.selected) !== -1 ) {
@@ -374,56 +439,32 @@ export default {
               }, {
                   "mDataProp" : "geneName"
               }, {
-                  "mDataProp" : "avgLogFCA",
+                  "mDataProp" : "avgLogFC",
+                  "render": function (data) {
+                    return data.toFixed(3)
+                  }
+              }, {
+                  "mDataProp" : "pValAdj",
+                  "render": function (data) {
+                    return self.num2e(data)
+                  }
+              }, {
+                  "mDataProp" : "pValue",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               },  {
-                  "mDataProp" : "avgLogFCB",
-                  "render": function (data) {
-                    return data.toFixed(3)
-                  }
-              },{
-                  "mDataProp" : "pValAdjA",
-                  "render": function (data) {
-                    return self.num2e(data)
-                  }
-              }, {
-                  "mDataProp" : "pValAdjB",
-                  "render": function (data) {
-                    return self.num2e(data)
-                  }
-              }, {
-                  "mDataProp" : "pValueA",
+                  "mDataProp" : "pctA",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               }, {
-                  "mDataProp" : "pValueB",
+                  "mDataProp" : "pctB",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
-              }, {
-                  "mDataProp" : "pct1A",
-                  "render": function (data) {
-                    return data.toFixed(3)
-                  }
-              }, {
-                  "mDataProp" : "pct1B",
-                  "render": function (data) {
-                    return data.toFixed(3)
-                  }
-              }, {
-                  "mDataProp" : "pct2A",
-                  "render": function (data) {
-                    return data.toFixed(3)
-                  }
-              },{
-                  "mDataProp" : "pct2B",
-                  "render": function (data) {
-                    return data.toFixed(3)
-                  }
-              }],
+              }
+            ],
           })
           self.table = table
 
@@ -722,13 +763,13 @@ export default {
         let xScale = d3.scaleLinear().domain(d3.extent(xData)).range([padding.left,width - padding.right]).nice()
         svg.append("g")
           .attr("transform", "translate(0," + (height - padding.bottom) + ")")
-          .call(d3.axisBottom(xScale).tickValues([-25,0,25]))
+          .call(d3.axisBottom(xScale).tickValues([-20,0,20]))
           .selectAll("text")
 
         let yScale = d3.scaleLinear().domain(d3.extent(yData)).range([height - padding.bottom, padding.top]).nice()
         svg.append("g")
           .attr("transform", "translate(" + (padding.left) + ",0)")
-          .call(d3.axisLeft(yScale).tickValues([-25,0,25]))
+          .call(d3.axisLeft(yScale).tickValues([-20,0,20]))
 
         svg.selectAll("circle")
            .data(xData)

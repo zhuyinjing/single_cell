@@ -51,6 +51,7 @@
       <el-menu-item-group>
         <span slot="" class="title-style">类间特征基因表达分析</span>
         <router-link to="/sc/CCA_group_violin"><el-menu-item index="CCA_group_violin">类间特征基因表达分析</el-menu-item></router-link>
+        <router-link to="/sc/CCA_inner_list"><el-menu-item index="CCA_inner_list">聚类内部不同样本组间差异表达基因</el-menu-item></router-link>
       </el-menu-item-group>
     </el-menu>
   </div>

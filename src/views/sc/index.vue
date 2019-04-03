@@ -61,7 +61,9 @@ export default {
               }
             }
           })
-        } 
+        } else {
+          this.$store.commit('setcommonInfo', degData.value)
+        }
         this.loading = false
       }
     }

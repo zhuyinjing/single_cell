@@ -63,7 +63,7 @@ export default {
         d3.selectAll('#heatmapsvg').remove()
       }
       let padding = {top:50,right:150,bottom:30,left:0}
-      let width = 5, height = 15  // 每个 rect 的宽度/高度
+      let width = 3, height = 10  // 每个 rect 的宽度/高度
       let number = this.pcArr.length > 2 ? 3 : this.pcArr.length // 一行显示几个图，默认为 3，小于 3 则按 个数显示
       let xData = this.data[this.pcArr[0]].cellIdList
       let heatmapsvg = d3.select("#d3container").append("svg").attr("width", (width * xData.length + padding.left + padding.right) * number).attr("height", ((height * this.data[this.pcArr[0]].geneIdList.length + padding.top + padding.bottom) * Math.ceil(this.pcArr.length / number))).attr("id", "heatmapsvg")
@@ -117,7 +117,7 @@ export default {
             .data(yText)
             .enter()
             .append("text")
-            .attr("transform", (d,i) => {return "translate("+ (width * xData.length + 5) +", " + (height * (i+1) - 3) + ")"})
+            .attr("transform", (d,i) => {return "translate("+ (width * xData.length + 5) +", " + height * (i+1) + ")"})
             .text(d => d)
             .attr("font-size", height +"px")
 

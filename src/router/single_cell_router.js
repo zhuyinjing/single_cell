@@ -120,6 +120,11 @@ let router = [
         name: 'CCA_group_violin',
         component: resolve => require(['@/views/sc/CCA/CCA_group_violin'], resolve)
       },
+      {
+        path: 'CCA_inner_list',
+        name: 'CCA_inner_list',
+        component: resolve => require(['@/views/sc/CCA/CCA_inner_list'], resolve)
+      },
     ]
   }
 ]

@@ -1,20 +1,7 @@
 <template>
   <div id="container">
     <h2>聚类内部不同样本组间差异表达基因</h2>
-    <el-tabs v-model="activeTab" v-show="violinSvgShow || heatmapSvgShow || scatterSvgShow">
-      <el-tab-pane style="overflow-x:auto" label="VliPlot" name="violinSvgShow">
-        <div class="violin">
-          <h3>特征基因表达值分布</h3>
-          <p>如下所示，小提琴图展示了特征基因在不同tSNE聚类中的表达量分布。横坐标标识不同tSNE聚类，纵坐标表示基因的UMI数目，每个点代表一个细胞。</p>
-          <div v-show="violinSvgShow">
-            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['violin', 'violinContainer'])">{{$t('button.svg')}}</el-button>
-            <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
-          </div>
-
-          <div id="violinContainer"></div>
-        </div>
-
-      </el-tab-pane>
+    <el-tabs v-model="activeTab" v-show="heatmapSvgShow || scatterSvgShow">
       <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
         <div class="scatter">
           <h3>特征基因表达值聚类图标记</h3>
@@ -43,9 +30,8 @@
     <br>
 
     <el-card class="" shadow="hover">
-      <el-button type="primary" size="middle" @click="initViolinData()">VlnPlot</el-button>
       <el-button type="danger" size="middle" @click="initScatterData()">FeaturePlot</el-button>
-      <el-button type="danger" size="middle" @click="initHeatmapData()">Heatmap</el-button>
+      <el-button type="primary" size="middle" @click="initHeatmapData()">Heatmap</el-button>
     </el-card>
 
     <br>
@@ -102,10 +88,6 @@
 
       <br>
 
-      <div id="test">
-
-      </div>
-
     <div class="">
       <table id="table" cellspacing="0" width="100%" class="display table table-striped table-bordered">
           <thead>
@@ -140,7 +122,6 @@ export default {
       pctAEnd: '',
       pctBStart: '',
       pctBEnd: '',
-      violinSvgShow: false,
       data: [],
       table: null,
       selected: [],
@@ -150,7 +131,7 @@ export default {
       scatterSvgShow: false,
       scatterData: [],
       filterMethod: false,
-      activeTab: 'violinSvgShow',
+      activeTab: 'scatterSvgShow',
       sample: [],
       clusterRadio: null,
     }
@@ -158,7 +139,6 @@ export default {
   components: {
   },
   mounted() {
-    // this.test()
     if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
       this.getDBdata()
     } else {
@@ -213,96 +193,6 @@ export default {
       // this.axios.post('/singel_cell/server/get_inner_comparison_circle', formData).then(res => {
       //
       // })
-      this.axios.get('/singel_cell/server/get_inner_comparison_tsne_score?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&clusterName=' + '0' + '&geneId=' + 'ENSMUSG00000001985,ENSMUSG00000003545').then(res => {
-        console.log(res.data);
-      })
-      var width = 960,
-          size = 230,
-          padding = 20;
-
-      var x = d3.scaleLinear()
-          .range([padding / 2, size - padding / 2]);
-
-      var y = d3.scaleLinear()
-          .range([size - padding / 2, padding / 2]);
-
-      var xAxis = d3.axisBottom()
-          .scale(x)
-          .ticks(6);
-
-      var yAxis = d3.axisLeft()
-          .scale(y)
-          .ticks(6);
-
-      var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-      d3.csv("/static/flowers.csv", function(error, data) {
-        if (error) throw error;
-
-        var domainByTrait = {},
-            traits = d3.keys(data[0]).filter(function(d) { return d !== "species"; }),
-            n = traits.length;
-
-        traits.forEach(function(trait) {
-          domainByTrait[trait] = d3.extent(data, function(d) { return d[trait]; });
-        });
-
-        var svg = d3.select("#test").append("svg")
-            .attr("width", size * n + padding)
-            .attr("height", size * n + padding)
-          .append("g")
-            .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
-
-        svg.selectAll(".x.axis")
-            .data(traits)
-          .enter().append("g")
-            .attr("class", "x axis")
-            .attr("transform", function(d, i) { return "translate(" + (n - i - 1) * size + ","+  (n * size - 10)+")"; })
-            .each(function(d) { x.domain(domainByTrait[d]); d3.select(this).call(xAxis); });
-
-        svg.selectAll(".y.axis")
-            .data(traits)
-          .enter().append("g")
-            .attr("class", "y axis")
-            .attr("transform", function(d, i) { return "translate(10," + i * size + ")"; })
-            .each(function(d) { y.domain(domainByTrait[d]); d3.select(this).call(yAxis); });
-
-        var cell = svg.selectAll(".cell")
-            .data(cross(traits, traits))
-          .enter().append("g")
-            .attr("class", "cell")
-            .attr("transform", function(d) {return "translate(" + (n - d.i - 1) * size + "," + d.j * size + ")"; })
-            .each(plot);
-
-        function plot(p) {
-          var cell = d3.select(this);
-
-          cell.append("rect")
-              .attr("class", "frame")
-              .attr("x", padding / 2)
-              .attr("y", padding / 2)
-              .attr("width", size - padding)
-              .attr("height", size - padding)
-              .attr("fill", "none")
-              .attr("stroke", "black")
-
-          cell.selectAll("circle")
-              .data(data)
-            .enter().append("circle")
-              .attr("cx", function(d) { return x(d['petal length']); })
-              .attr("cy", function(d) { return y(d['petal length']); })
-              .attr("r", 4)
-              .style("fill", function(d) { return color(d.species); });
-        }
-
-
-      });
-
-      function cross(a, b) {
-        var c = [], n = a.length, m = b.length, i, j;
-        for (i = -1; ++i < n;) for (j = -1; ++j < m;) c.push({x: a[i], i: i, y: b[j], j: j});
-        return c;
-      }
     },
     getDBdata () {
       let result = indexedDB.open('deg')
@@ -470,131 +360,6 @@ export default {
 
         })
     },
-    initViolinData () {
-      if (this.selected.length === 0) {
-        // let hassvg = d3.selectAll('#violinsvg')._groups[0].length
-        // // 如果取消 checkbox 选中 再点击生成小提琴图 则清除 svg
-        // if (hassvg) {
-        //   d3.selectAll('#violinsvg').remove()
-        //   this.violinSvgShow = false
-        // } else {
-          this.$message.error("请选择您要生成小提琴图的基因！")
-        // }
-        return
-      }
-      this.axios.get('/singel_cell/server/get_gene_violin_plot?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&geneId=' + this.selected.join(',')).then((res) => {
-        if (res.data.message_type === 'success') {
-          this.data = res.data
-          this.initViolin()
-        } else {
-          this.$message.error(res.data.message)
-        }
-      })
-    },
-    initViolin () {
-      // 生成 svg 的按钮
-      this.violinSvgShow = true
-      this.activeTab = 'violinSvgShow' // tab 被激活
-      let self = this
-      let hassvg = d3.selectAll('#violinsvg')._groups[0].length
-      if (hassvg) {
-        d3.selectAll('#violinsvg').remove()
-      }
-      let width = 600, height = 600 // 每个 g 标签的宽度/高度
-      let padding = {top:30,right:80,bottom:60,left:60}
-      let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
-      let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
-      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-
-      let xData = this.data.clusterNameList // 分组
-
-      for (let i = 0;i < this.selected.length;i++) {
-        let svg = violinsvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
-
-        var yValueArr = this.data[this.selected[i]].map(item => item[2])
-
-        // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
-        var x = d3.scaleBand()
-          .range([ padding.left, width - padding.right ])
-          .domain(xData)
-          .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
-        svg.append("g")
-          .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
-          .call(d3.axisBottom(x))
-
-        // Build and Show the Y scale
-        var y = d3.scaleLinear()
-          .domain(d3.extent(yValueArr))          // Note that here the Y scale is set manually
-          .range([height - padding.bottom, padding.top]).nice()
-
-        svg.append("g")
-           .attr("transform", "translate("+ padding.left +",0)")
-           .call(d3.axisLeft(y))
-
-        // 随机散点
-        var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
-
-        // 每个图 按分组去画 violin plot
-        for (let j = 0;j < xData.length;j++) {
-          var data = this.data[this.selected[i]].filter(item => item[1] === xData[j])
-
-          var yData = data.map(item => item[2])
-
-          // Features of the histogram
-          var histogram = d3.histogram()
-              .domain(d3.extent(yData))
-              .thresholds(y.ticks(20))    // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
-              .value(d => d)
-          var input, bins,allBins,lengths,longuest
-          // Compute the binning for each group of the dataset
-          var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d[1];})
-              .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d[2];})    // Keep the variable called Sepal_Length
-                bins = histogram(input)   // And compute the binning on it.
-                return(bins)
-              })
-              .entries(data)
-
-          // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
-          var maxNum = 0
-          for (let k = 0;k < sumstat.length;k++){
-            allBins = sumstat[k].value
-            lengths = allBins.map(function(a){return a.length;})
-            longuest = d3.max(lengths)
-            if (longuest > maxNum) { maxNum = longuest }
-          }
-          // The maximum width of a violin must be x.bandwidth = the width dedicated to a group
-          var xNum = d3.scaleLinear()
-            .range([0, x.bandwidth()])
-            .domain([-maxNum,maxNum])
-
-          // Add the shape to this svg!
-          svg
-            .selectAll("myViolin")
-            .data(sumstat)
-            .enter()        // So now we are working group per group
-            .append("g")
-            .attr("transform", function(d){ return("translate(" + x(d.key) +" ,0)") } ) // Translation on the right to be at the group position
-            .append("path")
-            .datum(function(d){ return(d.value)})     // So now we are working bin per bin
-            .style("stroke", "black")
-            .style("fill",(d,i) => colorScale(j))
-            .attr("d", d3.area()
-                         .x0(function(d){ return(xNum(-d.length)) } )
-                         .x1(function(d){ return(xNum(d.length)) } )
-                         .y(function(d){ return(y(d.x0)) } )
-                         .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
-            )
-        }
-
-        svg.append("text")
-          .attr("transform", "translate("+ (width / 2) +", "+ padding.top/2 +")")
-          .text(this.data[this.selected[i]][0][0])
-          .attr("text-anchor", "middle")
-          .attr("font-size", "16px")
-      }
-    },
     initHeatmapData () {
       if (this.selected.length === 0) {
         this.$message.error("请选择您要生成热图的基因！")
@@ -720,7 +485,7 @@ export default {
         // }
         return
       }
-      this.axios.get('singel_cell/server/get_gene_tsne_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',') + '&clusterName=' + this.clusterRadio).then((res) => {
+      this.axios.get('/singel_cell/server/get_inner_comparison_tsne_score?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&clusterName=' + '0' + '&geneId=' + this.selected.join(',')).then(res => {
         if (res.data.message_type === 'success') {
           this.scatterData = res.data
           this.initScatter()
@@ -730,6 +495,7 @@ export default {
       })
     },
     initScatter () {
+      console.time("timeTotal")
       // 生成 svg 的按钮
       this.scatterSvgShow = true
       this.activeTab = 'scatterSvgShow' // tab 被激活
@@ -739,10 +505,6 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      let width = 800, height = 800 // 每个 g 标签的宽度/高度
-      let padding = {top:50,right:80,bottom:40,left:60}
-      let number = this.selected.length // 一行显示几个图
-      let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
       let tooltip = d3.select('#container')
       	.append('div')
       	.style('position', 'absolute')
@@ -753,62 +515,132 @@ export default {
       	.style('font-weight', 'bold')
       	.text('')
       let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
+      let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
 
-      for (let i = 0;i < this.selected.length;i++) {
-        let svg = scattersvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
-        let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
-        let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的值，为了区别颜色的深浅
-        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorValue)[0] - (d3.extent(colorValue)[1] - d3.extent(colorValue)[0]) / 10,d3.extent(colorValue)[1]])
+      var size = 600,
+          padding = 20;
 
-        let xScale = d3.scaleLinear().domain(d3.extent(xData)).range([padding.left,width - padding.right]).nice()
-        svg.append("g")
-          .attr("transform", "translate(0," + (height - padding.bottom) + ")")
-          .call(d3.axisBottom(xScale).tickValues([-20,0,20]))
-          .selectAll("text")
+      var x = d3.scaleLinear()
+          .domain(d3.extent(xData))
+          .range([padding / 2, size - padding / 2])
+          .nice()
 
-        let yScale = d3.scaleLinear().domain(d3.extent(yData)).range([height - padding.bottom, padding.top]).nice()
-        svg.append("g")
-          .attr("transform", "translate(" + (padding.left) + ",0)")
-          .call(d3.axisLeft(yScale).tickValues([-20,0,20]))
+      var y = d3.scaleLinear()
+          .domain(d3.extent(yData))
+          .range([size - padding / 2, padding / 2])
+          .nice()
 
-        svg.selectAll("circle")
-           .data(xData)
-           .enter()
-           .append("circle")
-           .attr("cx", (d,i) => xScale(xData[i]))
-           .attr("cy", (d,i) => yScale(yData[i]))
-           .attr("r", 1.5)
-           .attr("fill", (d,i) => colorScale(colorValue[i]))
-           .on('mouseover', function (d, i) {
-               return tooltip.style('visibility', 'visible').text(colorValue[i])
-             })
-             .on('mousemove', function (d, i) {
-               return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-             })
-             .on('mouseout', function (d, i) {
-               return tooltip.style('visibility', 'hidden')
-             })
+      var xAxis = d3.axisBottom()
+          .scale(x)
+          .ticks(6);
 
-         // x 轴文字
-         svg.append("text")
-           .attr("transform", "translate("+ (width / 2) +", " + height + ")")
-           .text(tsneNum[0])
-           .attr("text-anchor", "middle")
+      var yAxis = d3.axisLeft()
+          .scale(y)
+          .ticks(6);
 
-         // 标题
-         svg.append("text")
-           .attr("transform", "translate("+ (width / 2) +", " + (padding.top - 10) + ")")
-           .text(this.scatterData.geneMap[this.selected[i]])
-           .attr("text-anchor", "middle")
-           .attr("font-weight", 600)
+      // 判断所有 umiValue 的最大值最小值
+      let umiValueArr = [], extentArr = []
+      this.selected.map(item => umiValueArr = umiValueArr.concat([...Object.values(this.scatterData[item])]))
+      umiValueArr = umiValueArr.map(item => item.umiValue)
+      umiValueArr.map(item => extentArr = extentArr.concat([...item]))
+      var color = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(extentArr)[0] - (d3.extent(extentArr)[1] - d3.extent(extentArr)[0]) / 10,d3.extent(extentArr)[1]])
+      // var color = d3.scaleSequential(d3Chromatic.interpolateReds).domain([0,5])
 
-         // y 轴文字
-         svg.append("text")
-           .text(tsneNum[1])
-           .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
+      var traits = this.selected,
+          n = this.sample.length;
+
+      var svg = d3.select("#scatterContainer").append("svg")
+          .attr("width", size * n + padding * 2)
+          .attr("height", size * this.selected.length + padding)
+          .attr("id", "scattersvg")
+        .append("g")
+          .attr("transform", "translate(" + padding + "," + padding / 2 + ")");
+
+      svg.selectAll(".x.axis")
+          .data(this.sample)
+        .enter().append("g")
+          .attr("class", "x axis")
+          .attr("transform", function(d, i) { return "translate(" + i * size + ","+  (self.selected.length * size - 10)+")"; })
+          .each(function(d) { d3.select(this).call(xAxis); });
+
+      svg.selectAll(".y.axis")
+          .data(traits)
+        .enter().append("g")
+          .attr("class", "y axis")
+          .attr("transform", function(d, i) { return "translate(10," + i * size + ")"; })
+          .each(function(d) { d3.select(this).call(yAxis); });
+
+      // x 轴标题
+      svg.selectAll(".text")
+        .data(this.sample).enter()
+        .append("text")
+        .attr("transform", (d, i) => "translate("+ (i * size + (size / 2))+ "," + 0 + ")")
+        .text(d => d)
+        .attr("text-anchor", "middle")
+        .attr("font-weight", 600)
+
+      // y 轴标题
+      svg.selectAll(".text")
+        .data(this.selected).enter()
+        .append("text")
+        .attr("transform", (d, i) => "translate("+ this.sample.length * size + "," + (i * size + (size / 2)) + ") rotate(90)")
+        .text(d => this.scatterData.geneMap[d])
+        .attr("text-anchor", "middle")
+        .attr("font-weight", 600)
+
+      var cell = svg.selectAll(".cell")
+          .data([...new Array(this.sample.length * this.selected.length)].map((k,i) => i))
+        .enter().append("g")
+          .attr("class", "cell")
+          .attr("transform", function(d, i) {return "translate(" + (d % n) * size + "," + Math.floor(i / n) * size + ")"; })
+          .each(plot);
+
+      function plot(p) {
+        let rectValue = self.scatterData[self.selected[Math.floor(p / n)]][self.sample[p % n]]
+        let rectIdList = rectValue.cellId
+        let rectUMIList = rectValue.umiValue
+        var cell = d3.select(this);
+
+        cell.append("rect")
+            .attr("class", "frame")
+            .attr("x", padding / 2)
+            .attr("y", padding / 2)
+            .attr("width", size - padding)
+            .attr("height", size - padding)
+            .attr("fill", "none")
+            .attr("stroke", "black")
+
+        let circles = cell.selectAll("circle")
+            .data(self.$store.state.commonInfo.cellId)
+            .enter().append("circle")
+            .attr("cx", (d,i) => x(xData[i]))
+            .attr("cy", (d,i) => y(yData[i]))
+            .attr("r", 1.5)
+            .style("fill", (d, i) => {
+              return color(0)
+              // let index = rectIdList.findIndex(item => item === d)
+              // return index === -1 ? color(0) : color(rectUMIList[index])
+            })
+            .attr("id", (d) => d + p)
+            // .on('mouseover', function (d, i) {
+            //   let index = rectIdList.findIndex(item => item === d)
+            //   let text = index === -1 ? 0 : rectUMIList[index]
+            //   return tooltip.style('visibility', 'visible').text(text)
+            // })
+            // .on('mousemove', function (d, i) {
+            //   return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
+            // })
+            // .on('mouseout', function (d, i) {
+            //   return tooltip.style('visibility', 'hidden')
+            // })
+
+            rectIdList.map((item, index) => d3.select("#" + item + p).style("fill", color(rectUMIList[index])))
+
 
 
       }
+
+      console.timeEnd("timeTotal")
 
     },
 

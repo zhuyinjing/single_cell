@@ -377,7 +377,6 @@ export default {
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
       let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
-      let sampleArr = Array.from(new Set(this.data.sampleId)).sort()
       let tooltip = d3.select('#container')
         .append('div')
         .style('position', 'absolute')
@@ -402,7 +401,7 @@ export default {
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
          .attr("r", 1.5)
-         .attr("fill", (d,i) => colorScale(self.data.clusterId[i]))
+         .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)
          })
@@ -429,7 +428,7 @@ export default {
         .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
 
       // 分组名称显示（在每组的中心位置）
-      let groupArr = Object.keys(this.data.avgMap)
+      let groupArr = this.$store.state.commonInfo.clusterNameList
       this.groupArr = groupArr
       this.mergeGroup = []
       //  更改组名的 form 表单内容 eg: { 原组名1: ‘’, 原组名2: ''}

@@ -714,6 +714,7 @@ export default {
       this.selected.map(item => umiValueArr = umiValueArr.concat([...Object.values(this.scatterData[item])]))
       umiValueArr = umiValueArr.map(item => item.umiValue)
       umiValueArr.map(item => extentArr = extentArr.concat([...item]))
+      // var color = d3.scaleLinear().domain(d3.extent(extentArr)).range(["#c4c4c4", "#fe0b07"]);
       var color = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(extentArr)[0] - (d3.extent(extentArr)[1] - d3.extent(extentArr)[0]) / 10,d3.extent(extentArr)[1]])
       // var color = d3.scaleSequential(d3Chromatic.interpolateReds).domain([0,5])
 

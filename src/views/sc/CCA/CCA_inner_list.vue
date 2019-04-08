@@ -1,7 +1,7 @@
 <template>
   <div id="container">
     <h2>聚类内部不同样本组间差异表达基因</h2>
-    <el-tabs v-model="activeTab" v-show="heatmapSvgShow || scatterSvgShow">
+    <el-tabs v-model="activeTab" v-show="DotPlotSvgShow || scatterSvgShow">
       <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
         <div class="scatter">
           <h3>特征基因表达值聚类图标记</h3>
@@ -14,16 +14,16 @@
           <div id="scatterContainer"></div>
         </div>
       </el-tab-pane>
-      <el-tab-pane style="overflow-x:auto" label="Heatmap" name="heatmapSvgShow">
-        <div class="heatmap">
+      <el-tab-pane style="overflow-x:auto" label="DotPlot" name="DotPlotSvgShow">
+        <div class="DotPlot">
           <h3>特征基因群表达值热图</h3>
           <p>如下热图所示，每一列代表一个细胞，每一行代表一个特征基因，每一个色块代表相应基因在相应细胞中的表达量，紫色代表低表达量，黄色代表高表达量。每个细胞所属的聚类也被标记在热图的下方。基于这个结果，可以对决定不同聚类的特征基因群做功能富集分析。</p>
-          <div v-show="heatmapSvgShow">
-            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['heatmap', 'heatmapContainer'])">{{$t('button.svg')}}</el-button>
+          <div v-show="DotPlotSvgShow">
+            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['DotPlot', 'DotPlotContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
           </div>
 
-          <div id="heatmapContainer"></div>
+          <div id="DotPlotContainer"></div>
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -31,7 +31,7 @@
 
     <el-card class="" shadow="hover">
       <el-button type="danger" size="middle" @click="initScatterData()">FeaturePlot</el-button>
-      <el-button type="primary" size="middle" @click="initHeatmapData()">Heatmap</el-button>
+      <el-button type="primary" size="middle" @click="initDotPlotData()">DotPlot</el-button>
     </el-card>
 
     <br>
@@ -126,8 +126,8 @@ export default {
       table: null,
       selected: [],
       currentData: [],
-      heatmapSvgShow: false,
-      heatmapData: [],
+      DotPlotSvgShow: false,
+      DotPlotData: [],
       scatterSvgShow: false,
       scatterData: [],
       filterMethod: false,
@@ -166,11 +166,6 @@ export default {
     $("#table").on("click", 'td input[type=checkbox]', function () {
       let checked = $(this).prop("checked")
       if (checked === true) {
-        if (self.selected.length === 2) { // 最多选中 2 个 gene
-          $(this).prop("checked", false)
-          self.$message.error("最多选择 2 个 gene！")
-          return
-        }
         self.selected.push(this.value)
         //  如果页面上的 checkbox 全选上了 将 checkall 赋值为 true
         // if ($(".checkchild:checked").length === self.currentData.length) {
@@ -185,15 +180,6 @@ export default {
     })
   },
   methods: {
-    test () {
-      // let formData = new FormData()
-      // formData.append("username", this.$store.state.username)
-      // formData.append("p", this.$store.state.projectId)
-      // formData.append("geneId", "ENSMUSG00000001985")
-      // this.axios.post('/singel_cell/server/get_inner_comparison_circle', formData).then(res => {
-      //
-      // })
-    },
     getDBdata () {
       let result = indexedDB.open('deg')
       result.onsuccess = (e) => {
@@ -360,117 +346,298 @@ export default {
 
         })
     },
-    initHeatmapData () {
+    initDotPlotData () {
       if (this.selected.length === 0) {
-        this.$message.error("请选择您要生成热图的基因！")
+        this.$message.error("请选择您要生成气泡图的基因！")
         return
       }
-      this.axios.get('singel_cell/server/get_gene_tsne_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',')).then((res) => {
+      if (this.selected.length > 30) {
+        this.$message.error("最多选择 30 个基因！")
+        return
+      }
+      let formData = new FormData()
+      formData.append("username", this.$store.state.username)
+      formData.append("p", this.$store.state.projectId)
+      formData.append("geneId", this.selected.join(','))
+      this.axios.post('/singel_cell/server/get_inner_comparison_circle', formData).then(res => {
         if (res.data.message_type === 'success') {
-          this.heatmapData = res.data
-          this.initHeatmap()
+          this.DotPlotData = res.data
+          this.initDotPlot()
         } else {
           this.$message.error(res.data.message)
         }
       })
     },
-    initHeatmap () {
+    initDotPlot () {
       // 生成 svg 的按钮
-      this.heatmapSvgShow = true
-      this.activeTab = 'heatmapSvgShow' // tab 被激活
+      this.DotPlotSvgShow = true
+      this.activeTab = 'DotPlotSvgShow' // tab 被激活
 
       let self = this
-      let hassvg = d3.selectAll('#heatmapsvg')._groups[0].length
+      let hassvg = d3.selectAll('#DotPlotsvg')._groups[0].length
       if (hassvg) {
-        d3.selectAll('#heatmapsvg').remove()
+        d3.selectAll('#DotPlotsvg').remove()
       }
-      let padding = {top:50,right:5,bottom:30,left:0}
-      let width = 5, height = 15  // 每个 rect 的宽度/高度
-      let xData = this.heatmapData.groupNum // 一共有几个分组，画几个 g 标签
-      let cellNumber = 0
-      this.heatmapData.groupNum.map(item => {
-        cellNumber+=this.heatmapData[item].cellIdList.length // 获取 cell 的总个数，为了确定 svg 的 width
-      })
-      let yTextPadding = 100 // 右侧文字所占空间的 width
-      let svgWidth = width * cellNumber + (padding.left + padding.right) * xData.length + yTextPadding
-      let svgHeight = height * this.selected.length + padding.top + padding.bottom
-      let heatmapsvg = d3.select("#heatmapContainer").append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", "heatmapsvg")
-      let colorValueArr = [] // 把所有分组拼接到一起，为了求所有数据的最大值和最小值 当作 colorScale 的值域
-      xData.map(item => {
-        colorValueArr = colorValueArr.concat(this.heatmapData[item]['umiMatrixList'])
-      })
-      let colorScale = d3.scaleSequential().domain(d3.extent(colorValueArr.map(d => d.umiValue))).interpolator(d3.interpolatePlasma)
+      var initWidth = 800
+      var initHeight = 800
 
-      let lastWidth = 0 // 记录之前所有的 width
-      for (let i = 0;i < xData.length;i++) {
-        i === 0? lastWidth = 0 :lastWidth += this.heatmapData[xData[i - 1]].cellIdList.length * width
-        let rectData = this.heatmapData[xData[i]].umiMatrixList
-        let cellLength = this.heatmapData[xData[i]]['cellIdList'].length
-        let geneLength = this.heatmapData[xData[i]]['geneIdList'].length
-
-        let w = lastWidth + (padding.right + padding.left) * i  // 每个 g 的位移
-        let h = padding.top
-        let svg = heatmapsvg.append("g").attr("transform", "translate("+ w + "," + h +")")
-
-        svg.selectAll("rect")
-           .data(rectData)
-           .enter()
-           .append("rect")
-           .attr("x", (d,i) => width * (i % cellLength))
-           .attr("y", (d,i) => height * parseInt(i / cellLength))
-           .attr("width", width)
-           .attr("height", height)
-           .attr("fill", (d,i) => colorScale(d.umiValue))
-
-         // x 轴文字
-         svg.append("text")
-           .attr("transform", "translate("+ (width * cellLength / 2) +", " + (height * geneLength + 20) + ")")
-           .text(xData[i])
-           .attr("text-anchor", "middle")
-           .attr("font-size", "16px")
-
+      var padding = {
+        left: 150,
+        top: 40,
+        right: 200,
+        bottom: 40
       }
 
-      // y 轴文字
-      heatmapsvg.append("g")
-         .attr("transform", (d,i) => {return "translate("+ (svgWidth - yTextPadding) +", " + padding.top + ")"})
-         .selectAll(".text")
-         .data(this.heatmapData[xData[0]].geneNameList)
-         .enter()
-         .append("text")
-         .attr("transform", (d,i) => {return "translate("+ 0 +", " + ((i + 1) * height) + ")"})
-         .text(d => d)
-         .attr("font-size", height +"px")
+      var width = initHeight - padding.left - padding.bottom
+      var height = initWidth - padding.top - padding.bottom
 
-      let defs = heatmapsvg.append("defs");
+      var svgG = d3.select("#DotPlotContainer")
+        .append("svg")
+        .attr("width", initWidth + padding.right)
+        .attr("height", initHeight + padding.bottom)
+        .attr("id", "DotPlotsvg")
+      var svg = svgG.append('g').attr('transform','translate('+padding.left+','+padding.top+')')
 
-      let linearGradient = defs.append("linearGradient")
+      //y轴比例尺
+      let ydata = this.DotPlotData.y
+      let yScale = d3.scaleBand().rangeRound([height, 0]).padding(1).domain(ydata)
+
+      //定义y轴
+      let yAxis = d3.axisLeft(yScale)
+
+      //添加y轴
+      let yaxisg = svg.append("g")
+        .attr("class", "yaxis")
+        .attr("transform", "translate(" + 0 + "," + 0 + ")")
+        .call(yAxis)
+        .style("font-size", "14px")
+
+      //x轴比例尺
+      let xData = this.DotPlotData.x
+
+      let xScale = d3.scaleBand().rangeRound([0, width]).padding(1).domain(xData)
+
+      //定义x轴
+      let xAxis = d3.axisBottom(xScale)
+
+      //添加x轴
+      let xaxisg = svg.append("g")
+        .attr("class", "xaxis")
+        .attr("transform", "translate(" + "0 ," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .style("font-size", "14px")
+        .style("text-anchor", "end")
+        .attr("transform", "translate(-15,10) rotate(-90)");
+
+        let color  = {}
+        color["A"] = d3.scaleLinear()
+            .domain(d3.extent(this.DotPlotData.docList, d => d.pctA))
+            .range(["#bebbbb", "red"]);
+
+        color["B"] = d3.scaleLinear()
+            .domain(d3.extent(this.DotPlotData.docList, d => d.pctB))
+            .range(["#bebbbb", "blue"]);
+
+        var radiusLinear = d3.scaleLinear()
+            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
+            .range([2, 8]);
+
+          //添加circle包裹层，有几种类型添加几个
+          var cover = svg.append("g")
+
+          //添加circle
+          cover.selectAll("circle")
+            .data(this.DotPlotData.docList)
+            .enter()
+            .append("circle")
+            .attr("cx", d => xScale(d.geneName))
+            .attr("cy", d => yScale(d.clusterName + '_' + d.groupName))
+            .attr("r", d => radiusLinear(d.meanValue))
+            .attr("fill", d => {
+                for (let k in d.sampleKey) {
+                  if (d.sampleKey[k] === d.groupName) {
+                    return color[k](d['pct' + k])
+                  }
+                }
+            })
+            .on("mouseover", function(d) {
+              let self = this;
+              d3.select(this)
+              showtext.attr("x", function() {
+                  return xScale(d.geneName)
+                })
+                .attr("y", function() {
+                  return yScale(d.clusterName + '_' + d.groupName) - d3.select(self).attr("r") * 1.6 - 5
+                })
+                .text(function() {
+                  for (let k in d.sampleKey) {
+                    if (d.sampleKey[k] === d.groupName) {
+                      return 'pct' + d.groupName + ': ' + d['pct' + k]
+                    }
+                  }
+                })
+                .attr("text-anchor", "middle")
+            })
+            .on("mouseout", function() {
+              d3.select(this)
+              showtext.text("")
+            })
+
+          // tooltip
+          let detail = cover.append("g")
+          let showtext = svg.append("text")
+            .text("")
+            .attr("font-size", '14px')
+
+      // 右侧颜色图例
+      var defs = svg.append("defs");
+
+  		var linearGradient = defs.append("linearGradient")
   								.attr("id","linearColor")
   								.attr("x1","0%")
   								.attr("y1","0%")
   								.attr("x2","100%")
   								.attr("y2","0%");
-      linearGradient.append("stop")
-  						      .attr("offset","0%")
-  						      .style("stop-color",d3.interpolatePlasma(0));
 
-      linearGradient.append("stop")
-  						      .attr("offset","50%")
-  						      .style("stop-color",d3.interpolatePlasma(0.5));
+  		var stop1 = linearGradient.append("stop")
+  						.attr("offset","0%")
+  						.style("stop-color","#bebbbb");
 
-  		linearGradient.append("stop")
-        						.attr("offset","100%")
-        						.style("stop-color",d3.interpolatePlasma(1));
+  		var stop2 = linearGradient.append("stop")
+  						.attr("offset","100%")
+  						.style("stop-color","red");
 
-      heatmapsvg.append("g")
-                .attr("transform","translate("+ 0 +","+ 5 +")")
-                .attr("id", "legend")
-                .append("rect")
-      					.attr("x", 0)
-      					.attr("y", 0)
-      					.attr("width", 100)
-      					.attr("height", 30)
-      					.style("fill","url(#" + linearGradient.attr("id") + ")")
+  		//添加一个矩形，并应用线性渐变
+  		var colorRect = svg.append("rect")
+  					.attr("x", width + 50)
+  					.attr("y", 200)
+  					.attr("width", 80)
+  					.attr("height", 20)
+  					.style("fill","url(#" + linearGradient.attr("id") + ")")
+
+  		//添加文字
+  		var minValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 50)
+  					.attr("y", 240)
+  					.attr("dy", "-0.3em")
+  					.text(() => d3.min(self.DotPlotData.docList , d => d.pctA));
+
+  		var maxValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 120)
+  					.attr("y", 240)
+  					.attr("dy", "-0.3em")
+  					.text(() => d3.max(self.DotPlotData.docList , d => d.pctA));
+
+      var maxValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 90)
+  					.attr("y", 190)
+  					.attr("dy", "-0.3em")
+  					.text(this.DotPlotData.docList[0].sampleKey["A"])
+            .attr("text-anchor", "middle")
+
+      // linearColorB
+      var defs = svg.append("defs");
+
+  		var linearGradient = defs.append("linearGradient")
+  								.attr("id","linearColorB")
+  								.attr("x1","0%")
+  								.attr("y1","0%")
+  								.attr("x2","100%")
+  								.attr("y2","0%");
+
+  		var stop1 = linearGradient.append("stop")
+  						.attr("offset","0%")
+  						.style("stop-color","#bebbbb");
+
+  		var stop2 = linearGradient.append("stop")
+  						.attr("offset","100%")
+  						.style("stop-color","blue");
+
+  		//添加一个矩形，并应用线性渐变
+  		var colorRect = svg.append("rect")
+  					.attr("x", width + 50)
+  					.attr("y", 270)
+  					.attr("width", 80)
+  					.attr("height", 20)
+  					.style("fill","url(#" + "linearColorB" + ")")
+
+  		//添加文字
+  		var minValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 50)
+  					.attr("y", 310)
+  					.attr("dy", "-0.3em")
+  					.text(() => d3.min(self.DotPlotData.docList , d => d.pctB));
+
+  		var maxValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 120)
+  					.attr("y", 310)
+  					.attr("dy", "-0.3em")
+  					.text(() => d3.max(self.DotPlotData.docList , d => d.pctB));
+
+      var maxValueText = svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 90)
+  					.attr("y", 270)
+  					.attr("dy", "-0.3em")
+  					.text(this.DotPlotData.docList[0].sampleKey["B"])
+            .attr("text-anchor", "middle")
+      // gene ratio
+      var circleRect = svg.append("rect")
+  					.attr("x", width + 50)
+  					.attr("y", 500)
+  					.attr("width", 40)
+  					.attr("height", 40)
+            .attr("fill", "white")
+            .attr("stroke", "#999")
+     svg.append("circle")
+            .attr("cx", width + 50 + 20)
+            .attr("cy", 500 + 20)
+            .attr("r", 2)
+            .attr("fill", "black")
+      svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 50)
+  					.attr("y", 490)
+  					.attr("dy", "-0.3em")
+  					.text(function(){
+  						return "pct.exp";
+  					});
+        svg.append("text")
+    					.attr("class","valueText")
+    					.attr("x", width + 100)
+    					.attr("y", 530)
+    					.attr("dy", "-0.3em")
+    					.text(function(){
+    						return (d3.min(self.DotPlotData.docList, function (d) {
+                				  return Number(d.meanValue) })).toFixed(3);
+    					});
+        var circleRect = svg.append("rect")
+    					.attr("x", width + 50)
+    					.attr("y", 540)
+    					.attr("width", 40)
+    					.attr("height", 40)
+              .attr("fill", "white")
+              .attr("stroke", "#999")
+       svg.append("circle")
+              .attr("cx", width + 50 + 20)
+              .attr("cy", 540 + 20)
+              .attr("r", 8)
+              .attr("fill", "black")
+      svg.append("text")
+  					.attr("class","valueText")
+  					.attr("x", width + 100)
+  					.attr("y", 570)
+  					.attr("dy", "-0.3em")
+  					.text(function(){
+  						return (d3.max(self.DotPlotData.docList, function (d) {
+              				  return Number(d.meanValue) })).toFixed(3);
+  					});
 
     },
     initScatterData () {
@@ -483,6 +650,10 @@ export default {
         // } else {
           this.$message.error("请选择您要生成SVG的基因！")
         // }
+        return
+      }
+      if (this.selected.length > 2) {
+        this.$message.error("最多选择 2 个基因！")
         return
       }
       this.axios.get('/singel_cell/server/get_inner_comparison_tsne_score?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId + '&clusterName=' + '0' + '&geneId=' + this.selected.join(',')).then(res => {
@@ -658,22 +829,9 @@ export default {
 .overflow-auto {
   overflow: auto;
 }
-.label-font {
-  font-size: 14px;
-}
-.overflow-auto {
-  overflow: auto;
-}
 .labelStyle {
   display:inline-block;
   width:95px;
   text-align:end;
-}
-.filterbtnDiv {
-  float: right;
-  margin-bottom: 10px;
-}
-.text-align-center {
-  text-align: center;
 }
 </style>

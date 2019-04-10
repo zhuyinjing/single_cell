@@ -886,7 +886,8 @@ export default {
       let formData = new FormData()
       formData.append("username", this.$store.state.username)
       formData.append("p", this.$store.state.projectId)
-      formData.append("geneId", this.selected.join(','))
+      // formData.append("geneId", this.selected.join(','))
+      formData.append("geneId", "ENSMUSG00000036353")
       this.axios.post('/singel_cell/server/get_inner_comparison_circle', formData).then(res => {
         if (res.data.message_type === 'success') {
           this.DotPlotData = res.data
@@ -918,6 +919,12 @@ export default {
 
       var width = initHeight - padding.left - padding.bottom
       var height = initWidth - padding.top - padding.bottom
+
+      // 将 sampleKey 的 key value 调换， 方便取 pct
+      let sampleKey = {}
+      for (let k in this.DotPlotData.docList[0].sampleKey) {
+        sampleKey[this.DotPlotData.docList[0].sampleKey[k]] = k
+      }
 
       var svgG = d3.select("#DotPlotContainer")
         .append("svg")
@@ -960,15 +967,15 @@ export default {
 
         let color  = {}
         color["A"] = d3.scaleLinear()
-            .domain(d3.extent(this.DotPlotData.docList, d => d.pctA))
+            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
             .range(["#bebbbb", "red"]);
 
         color["B"] = d3.scaleLinear()
-            .domain(d3.extent(this.DotPlotData.docList, d => d.pctB))
+            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
             .range(["#bebbbb", "blue"]);
 
         var radiusLinear = d3.scaleLinear()
-            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
+            .domain([0, 1])
             .range([2, 8]);
 
           //添加circle包裹层，有几种类型添加几个
@@ -981,14 +988,8 @@ export default {
             .append("circle")
             .attr("cx", d => xScale(d.geneName))
             .attr("cy", d => yScale(d.clusterName + '_' + d.groupName))
-            .attr("r", d => radiusLinear(d.meanValue))
-            .attr("fill", d => {
-                for (let k in d.sampleKey) {
-                  if (d.sampleKey[k] === d.groupName) {
-                    return color[k](d['pct' + k])
-                  }
-                }
-            })
+            .attr("r", d => radiusLinear(d['pct' + sampleKey[d.groupName]]))
+            .attr("fill", d => color[sampleKey[d.groupName]](d.meanValue))
             .on("mouseover", function(d) {
               let self = this;
               d3.select(this)
@@ -998,13 +999,7 @@ export default {
                 .attr("y", function() {
                   return yScale(d.clusterName + '_' + d.groupName) - d3.select(self).attr("r") * 1.6 - 5
                 })
-                .text(function() {
-                  for (let k in d.sampleKey) {
-                    if (d.sampleKey[k] === d.groupName) {
-                      return 'pct' + d.groupName + ': ' + d['pct' + k]
-                    }
-                  }
-                })
+                .text('pct' + d.groupName + ': ' + d['pct' + sampleKey[d.groupName]])
                 .attr("text-anchor", "middle")
             })
             .on("mouseout", function() {
@@ -1050,14 +1045,14 @@ export default {
   					.attr("x", width + 50)
   					.attr("y", 240)
   					.attr("dy", "-0.3em")
-  					.text(() => d3.min(self.DotPlotData.docList , d => d.pctA));
+  					.text(() => d3.min(self.DotPlotData.docList , d => d.meanValue).toFixed(2));
 
   		var maxValueText = svg.append("text")
   					.attr("class","valueText")
   					.attr("x", width + 120)
   					.attr("y", 240)
   					.attr("dy", "-0.3em")
-  					.text(() => d3.max(self.DotPlotData.docList , d => d.pctA));
+  					.text(() => d3.max(self.DotPlotData.docList , d => d.meanValue).toFixed(2));
 
       var maxValueText = svg.append("text")
   					.attr("class","valueText")
@@ -1099,14 +1094,14 @@ export default {
   					.attr("x", width + 50)
   					.attr("y", 310)
   					.attr("dy", "-0.3em")
-  					.text(() => d3.min(self.DotPlotData.docList , d => d.pctB));
+            .text(() => d3.min(self.DotPlotData.docList , d => d.meanValue).toFixed(2));
 
   		var maxValueText = svg.append("text")
   					.attr("class","valueText")
   					.attr("x", width + 120)
   					.attr("y", 310)
   					.attr("dy", "-0.3em")
-  					.text(() => d3.max(self.DotPlotData.docList , d => d.pctB));
+            .text(() => d3.max(self.DotPlotData.docList , d => d.meanValue).toFixed(2));
 
       var maxValueText = svg.append("text")
   					.attr("class","valueText")
@@ -1116,57 +1111,29 @@ export default {
   					.text(this.DotPlotData.docList[0].sampleKey["B"])
             .attr("text-anchor", "middle")
       // gene ratio
-      var circleRect = svg.append("rect")
-  					.attr("x", width + 50)
-  					.attr("y", 500)
-  					.attr("width", 40)
-  					.attr("height", 40)
-            .attr("fill", "white")
-            .attr("stroke", "#999")
-     svg.append("circle")
-            .attr("cx", width + 50 + 20)
-            .attr("cy", 500 + 20)
-            .attr("r", 2)
-            .attr("fill", "black")
-      svg.append("text")
-  					.attr("class","valueText")
-  					.attr("x", width + 50)
-  					.attr("y", 490)
-  					.attr("dy", "-0.3em")
-  					.text(function(){
-  						return "pct.exp";
-  					});
-        svg.append("text")
-    					.attr("class","valueText")
-    					.attr("x", width + 100)
-    					.attr("y", 530)
-    					.attr("dy", "-0.3em")
-    					.text(function(){
-    						return (d3.min(self.DotPlotData.docList, function (d) {
-                				  return Number(d.meanValue) })).toFixed(3);
-    					});
-        var circleRect = svg.append("rect")
-    					.attr("x", width + 50)
-    					.attr("y", 540)
-    					.attr("width", 40)
-    					.attr("height", 40)
-              .attr("fill", "white")
-              .attr("stroke", "#999")
-       svg.append("circle")
-              .attr("cx", width + 50 + 20)
-              .attr("cy", 540 + 20)
-              .attr("r", 8)
-              .attr("fill", "black")
-      svg.append("text")
-  					.attr("class","valueText")
-  					.attr("x", width + 100)
-  					.attr("y", 570)
-  					.attr("dy", "-0.3em")
-  					.text(function(){
-  						return (d3.max(self.DotPlotData.docList, function (d) {
-              				  return Number(d.meanValue) })).toFixed(3);
-  					});
+     let legendCircle = svg.append("g").attr("transform", "translate("+ (width + 50) +", 500)")
+     legendCircle.selectAll('.circle')
+                 .data([0, 0.25, 0.50, 0.75, 1])
+                 .enter()
+                 .append("circle")
+                 .attr("cx", (d, i) => 20)
+                 .attr("cy", (d, i) => i * 20)
+                 .attr("r", (d, i) => radiusLinear(d))
 
+     legendCircle.selectAll('.text')
+                 .data([0, 0.25, 0.50, 0.75, 1])
+                 .enter()
+                 .append("text")
+                 .attr("x", (d, i) => 40)
+                 .attr("y", (d, i) => i * 20 + 5)
+                 .text((d) => d.toFixed(2))
+
+      legendCircle.append("text")
+  					.attr("class","valueText")
+  					.attr("x", 15)
+  					.attr("y", -20)
+  					.attr("dy", "-0.3em")
+  					.text("pct.exp");
     },
 
   }

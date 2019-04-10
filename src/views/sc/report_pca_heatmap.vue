@@ -67,15 +67,6 @@ export default {
       let number = 1
       let xData = this.data[this.pcArr[0]].cellIdList
       let heatmapsvg = d3.select("#d3container").append("svg").attr("width", (width * xData.length + padding.left + padding.right) * number).attr("height", ((height * this.data[this.pcArr[0]].geneIdList.length + padding.top + padding.bottom) * Math.ceil(this.pcArr.length / number))).attr("id", "heatmapsvg")
-      let tooltip = d3.select('#container')
-      	.append('div')
-      	.style('position', 'absolute')
-        .style('z-index', '10')
-      	.style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '12px')
-      	.style('font-weight', 'bold')
-      	.text('')
       for (let i = 0;i < this.pcArr.length;i++) {
         let rectData = this.data[this.pcArr[i]].umiMatrixList
         let yText = this.data[this.pcArr[i]].geneNameList
@@ -95,15 +86,6 @@ export default {
            .attr("width", width)
            .attr("height", height)
            .attr("fill", (d,i) => colorScale(d))
-          // .on('mouseover', function (d, i) {
-          //     return tooltip.style('visibility', 'visible').text(d.umiValue)
-          //   })
-          //   .on('mousemove', function (d, i) {
-          //     return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-          //   })
-          //   .on('mouseout', function (d, i) {
-          //     return tooltip.style('visibility', 'hidden')
-          //   })
 
          // x 轴文字
          svg.append("text")

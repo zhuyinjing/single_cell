@@ -118,7 +118,4 @@ export default {
 .clear {
   clear: both;
 }
-#elbowContainer {
-  white-space: nowrap;
-}
 </style>

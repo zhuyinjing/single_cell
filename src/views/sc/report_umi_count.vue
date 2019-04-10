@@ -63,7 +63,7 @@ export default {
         .style('z-index', '10')
       	.style('color', '#3497db')
         .style('visibility', 'hidden')
-        .style('font-size', '12px')
+        .style('font-size', '18px')
       	.style('font-weight', 'bold')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},
@@ -191,7 +191,7 @@ export default {
         .style('z-index', '10')
       	.style('color', '#3497db')
         .style('visibility', 'hidden')
-        .style('font-size', '12px')
+        .style('font-size', '18px')
       	.style('font-weight', 'bold')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},

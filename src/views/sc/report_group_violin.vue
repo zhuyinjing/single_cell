@@ -181,11 +181,6 @@ export default {
     $("#table").on("click", 'td input[type=checkbox]', function () {
       let checked = $(this).prop("checked")
       if (checked === true) {
-        if (self.selected.length === 2) { // 最多选中 2 个 gene
-          $(this).prop("checked", false)
-          self.$message.error("最多选择 2 个 gene！")
-          return
-        }
         self.selected.push(this.value)
         //  如果页面上的 checkbox 全选上了 将 checkall 赋值为 true
         // if ($(".checkchild:checked").length === self.currentData.length) {
@@ -360,6 +355,10 @@ export default {
         // }
         return
       }
+      if (this.selected.length > 2) {
+        this.$message.error('最多选择 2 个基因！')
+        return
+      }
       this.axios.get('/singel_cell/server/get_gene_violin_plot?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&geneId=' + this.selected.join(',')).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
@@ -477,6 +476,10 @@ export default {
     initHeatmapData () {
       if (this.selected.length === 0) {
         this.$message.error("请选择您要生成热图的基因！")
+        return
+      }
+      if (this.selected.length > 30) {
+        this.$message.error('最多选择 30 个基因！')
         return
       }
       this.axios.get('singel_cell/server/get_gene_tsne_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',')).then((res) => {
@@ -597,6 +600,10 @@ export default {
         // } else {
           this.$message.error("请选择您要生成SVG的基因！")
         // }
+        return
+      }
+      if (this.selected.length > 2) {
+        this.$message.error('最多选择 2 个基因！')
         return
       }
       this.axios.get('singel_cell/server/get_gene_tsne_score?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',') + '&clusterName=' + this.clusterRadio).then((res) => {

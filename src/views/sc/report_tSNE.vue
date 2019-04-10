@@ -291,7 +291,7 @@ export default {
         .style('z-index', '10')
         .style('color', '#3497db')
         .style('visibility', 'hidden')
-        .style('font-size', '12px')
+        .style('font-size', '18px')
         .style('font-weight', 'bold')
         .text('')
 
@@ -382,7 +382,7 @@ export default {
         .style('z-index', '10')
         .style('color', '#3497db')
         .style('visibility', 'hidden')
-        .style('font-size', '12px')
+        .style('font-size', '18px')
         .style('font-weight', 'bold')
         .text('')
 

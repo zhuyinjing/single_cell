@@ -74,22 +74,9 @@ export default {
       let number = 3 // 一行显示几个图
       let scattersvg = d3.select("#d3container").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.pcArr.length / number))).attr("id", "scattersvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
-      let tooltip = d3.select('#container')
-      	.append('div')
-      	.style('position', 'absolute')
-        .style('z-index', '10')
-      	.style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '12px')
-      	.style('font-weight', 'bold')
-      	.text('')
 
       for (let i = 0;i < this.pcArr.length;i++) {
         let svg = scattersvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
-
-        // let xData = this.data[this.pcArr[i]].jackStawPlot.map(item => item.empiricalPValue)
-        // let yData = this.data[this.pcArr[i]].jackStawPlot.map(item => item.fakePValue)
-
         let xScale = d3.scaleLinear().domain([0,0.1]).range([padding.left,width - padding.right])
         svg.append("g")
           .attr("transform", "translate(0," + (height - padding.bottom) + ")")

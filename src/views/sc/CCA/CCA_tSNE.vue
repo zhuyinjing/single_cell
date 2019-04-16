@@ -115,6 +115,7 @@
 </template>
 
 <script>
+import bus from '@/bus.js'
 import * as d3 from 'd3'
 
 export default {
@@ -143,6 +144,9 @@ export default {
   components: {
   },
   mounted() {
+    bus.$on("initScatterCluster", () => {
+      this.initScatterCluster()
+    })
     if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
       this.getDBdata()
     } else {
@@ -266,8 +270,8 @@ export default {
       formData.append('clusterNameMap', JSON.stringify(this.changeNameForm))
       this.axios.post('/singel_cell/server/rename_cluster', formData).then((res) => {
         if (res.data.message_type === 'success') {
-          this.$message.success(res.data.message)
-          this.initData()
+          bus.$emit('updateDBData')
+          // this.$message.success(res.data.message)
         } else {
           this.$message.error(res.data.message)
         }
@@ -361,7 +365,6 @@ export default {
               return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
             })
             .text(d => d.groupName)
-            .attr("class","groupText")
 
     },
     initScatterCluster () {
@@ -435,15 +438,15 @@ export default {
       this.changeNameForm = {}
       this.groupArr.map((item) => this.changeNameForm[item] = '')
 
-      let groupPointText = svg.selectAll(".text")
-                .data(groupArr)
-                .enter()
-                .append("text")
-                .attr("transform",d => "translate("+ xScale(this.data.avgMap[d][xText]) +","+ yScale(this.data.avgMap[d][yText]) +")")
-                .text(d => d)
-                .attr("fill","black")
-                .attr("text-anchor", "middle")
-                .classed("groupText",true)
+      // let groupPointText = svg.selectAll(".text")
+      //           .data(groupArr)
+      //           .enter()
+      //           .append("text")
+      //           .attr("transform",d => "translate("+ xScale(this.data.avgMap[d][xText]) +","+ yScale(this.data.avgMap[d][yText]) +")")
+      //           .text(d => d)
+      //           .attr("fill","black")
+      //           .attr("text-anchor", "middle")
+      //           .classed("groupText",true)
 
       //  分组颜色图例
       let legendR = 8

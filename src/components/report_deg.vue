@@ -141,7 +141,7 @@ export default {
     '$route': 'getTabelValueReset2'
   },
   methods: {
-    saveData() {
+    saveData () {
       let table = $('#exampledeg').DataTable()
       let data = []
       table.column(0, {

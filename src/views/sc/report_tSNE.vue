@@ -53,7 +53,6 @@
       </div>
     </div>
 
-
     <el-dialog
       title="合并组"
       :visible.sync="mergeDialogShow"
@@ -113,6 +112,7 @@
 </template>
 
 <script>
+import bus from '@/bus.js'
 import * as d3 from 'd3'
 
 export default {
@@ -141,6 +141,9 @@ export default {
   components: {
   },
   mounted() {
+    bus.$on("initScatterCluster", () => {
+      this.initScatterCluster()
+    })
     if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
       this.getDBdata()
     } else {
@@ -264,8 +267,8 @@ export default {
       formData.append('clusterNameMap', JSON.stringify(this.changeNameForm))
       this.axios.post('/singel_cell/server/rename_cluster', formData).then((res) => {
         if (res.data.message_type === 'success') {
-          this.$message.success(res.data.message)
-          this.initData()
+          bus.$emit('updateDBData')
+          // this.$message.success(res.data.message)
         } else {
           this.$message.error(res.data.message)
         }
@@ -359,7 +362,6 @@ export default {
               return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
             })
             .text(d => d)
-            .attr("class","groupText")
 
     },
     initScatterCluster () {
@@ -391,7 +393,6 @@ export default {
 
       let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
       svg.append("g").call(d3.axisLeft(yScale))
-
       svg.selectAll(".cicle")
          .data(this.$store.state.commonInfo.cellId)
          .enter()
@@ -400,7 +401,7 @@ export default {
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
          .attr("r", 2)
-         .attr("fill", (d,i) => colorScale(self.data.clusterId[i]))
+         .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)
          })
@@ -427,26 +428,26 @@ export default {
         .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
 
       // 分组名称显示（在每组的中心位置）
-      let groupArr = Object.keys(this.data.avgMap)
+      let groupArr = this.$store.state.commonInfo.clusterNameList
       this.groupArr = groupArr
       this.mergeGroup = []
       //  更改组名的 form 表单内容 eg: { 原组名1: ‘’, 原组名2: ''}
       this.changeNameForm = {}
       this.groupArr.map((item) => this.changeNameForm[item] = '')
 
-      let groupPointText = svg.selectAll(".text")
-                .data(groupArr)
-                .enter()
-                .append("text")
-                .attr("transform",d => "translate("+ xScale(this.data.avgMap[d][xText]) +","+ yScale(this.data.avgMap[d][yText]) +")")
-                .text(d => d)
-                .attr("fill","black")
-                .attr("text-anchor", "middle")
-                .classed("groupText",true)
+      // let groupPointText = svg.selectAll(".text")
+      //           .data(groupArr)
+      //           .enter()
+      //           .append("text")
+      //           .attr("transform",d => "translate("+ xScale(this.data.avgMap[d][xText]) +","+ yScale(this.data.avgMap[d][yText]) +")")
+      //           .text(d => d)
+      //           .attr("fill","black")
+      //           .attr("text-anchor", "middle")
+      //           .classed("groupText",true)
 
       //  分组颜色图例
       let legendR = 8
-      let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
+      let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")").attr("class", "lengendCluster")
       legend.selectAll(".circle")
             .data(groupArr)
             .enter()

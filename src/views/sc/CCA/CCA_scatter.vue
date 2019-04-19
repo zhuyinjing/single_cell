@@ -122,6 +122,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
       var svgG = d3.select("#d3container")
         .append("svg")

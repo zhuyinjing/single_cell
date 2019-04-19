@@ -93,6 +93,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
         .attr('id','tooltipId')
       	.text('')
       let width = 240 * this.scale, height = 200 * this.scale

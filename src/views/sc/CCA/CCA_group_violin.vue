@@ -452,8 +452,8 @@ export default {
         // }
         return
       }
-      if (this.selected.length > 2) {
-        this.$message.error("最多选择 2 个基因！")
+      if (this.selected.length > 1) {
+        this.$message.error("最多选择 1 个基因！")
         return
       }
       this.axios.get('/singel_cell/server/get_gene_violin_plot?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&geneId=' + this.selected.join(',')).then((res) => {
@@ -474,9 +474,10 @@ export default {
       if (hassvg) {
         d3.selectAll('#violinsvg').remove()
       }
-      let width = 600, height = 600 // 每个 g 标签的宽度/高度
+      let width = 110 * this.$store.state.commonInfo.clusterNameList.length, height = 600 // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:60}
-      let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
+      // let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
+      let number = 1
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
 
@@ -560,6 +561,20 @@ export default {
                          .y(function(d){ return(y(d.x0)) } )
                          .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
             )
+            let x0 = Math.ceil(x(xData[j]))
+            let x1 = Math.floor(x(xData[j]) + x.bandwidth())
+
+            let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
+
+            svg.selectAll("g.circle")
+              .data(data)
+              .enter()
+              .append("circle")
+              .attr("cx", (d,i) => xLinear(randomData[i]))
+              .attr("cy", (d, i) => y(d[2]))
+              .attr("r", 1.5)
+              .attr("fill", "black")
+              .style("opacity", 0.2)
         }
 
         svg.append("text")
@@ -729,6 +744,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
       let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
 
@@ -785,11 +801,57 @@ export default {
            .text(tsneNum[1])
            .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
 
+         // 右侧颜色图例
+         var defs = svg.append("defs");
+
+       		var linearGradient = defs.append("linearGradient")
+       								.attr("id","linearColor" + this.selected[i])
+       								.attr("x1","0%")
+       								.attr("y1","0%")
+       								.attr("x2","100%")
+       								.attr("y2","0%");
+
+       		linearGradient.append("stop")
+       						.attr("offset","0%")
+       						.style("stop-color", d3Chromatic.interpolateReds(0));
+
+          linearGradient.append("stop")
+                  .attr("offset","50%")
+                  .style("stop-color", d3Chromatic.interpolateReds(0.5));
+
+       		linearGradient.append("stop")
+       						.attr("offset","100%")
+       						.style("stop-color", d3Chromatic.interpolateReds(1));
+
+       		//添加一个矩形，并应用线性渐变
+       		var colorRect = svg.append("rect")
+       					.attr("x", width - padding.right)
+       					.attr("y", padding.top)
+       					.attr("width", 60)
+       					.attr("height", 20)
+       					.style("fill","url(#" + linearGradient.attr("id") + ")")
+
+       		//添加文字
+       		var minValueText = svg.append("text")
+       					.attr("class","valueText")
+       					.attr("x", width - padding.right)
+       					.attr("y", padding.top + 40)
+       					.attr("dy", "-0.3em")
+                .attr("text-anchor", "middle")
+       					.text(() => d3.min(colorValue).toFixed(2));
+
+       		var maxValueText = svg.append("text")
+       					.attr("class","valueText")
+       					.attr("x", width - padding.right + 60)
+       					.attr("y", padding.top + 40)
+       					.attr("dy", "-0.3em")
+                .attr("text-anchor", "middle")
+       					.text(() => d3.max(colorValue).toFixed(2));
+
 
       }
 
     },
-
     initScatterCluster () {
       let self = this
       let splitGroup
@@ -811,6 +873,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
 
       let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
@@ -829,7 +892,7 @@ export default {
          .attr("r", 1.5)
          .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
-           return tooltip.style('visibility', 'visible').text(d)
+           return tooltip.style('visibility', 'visible').text('cluster: ' + self.$store.state.commonInfo.clusterId[i])
          })
          .on('mousemove', function (d, i) {
            return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
@@ -924,8 +987,8 @@ export default {
 
       // 将 sampleKey 的 key value 调换， 方便取 pct
       let sampleKey = {}
-      for (let k in this.DotPlotData.docList[0].sampleKey) {
-        sampleKey[this.DotPlotData.docList[0].sampleKey[k]] = k
+      for (let k in this.DotPlotData.sampleKey.sampleKey) {
+        sampleKey[this.DotPlotData.sampleKey.sampleKey[k]] = k
       }
 
       var svgG = d3.select("#DotPlotContainer")
@@ -978,7 +1041,7 @@ export default {
 
         var radiusLinear = d3.scaleLinear()
             .domain([0, 1])
-            .range([2, 8]);
+            .range([6, 10]);
 
           //添加circle包裹层，有几种类型添加几个
           var cover = svg.append("g")
@@ -1061,7 +1124,7 @@ export default {
   					.attr("x", width + 90)
   					.attr("y", 190)
   					.attr("dy", "-0.3em")
-  					.text(this.DotPlotData.docList[0].sampleKey["A"])
+  					.text(this.DotPlotData.sampleKey.sampleKey["A"])
             .attr("text-anchor", "middle")
 
       // linearColorB
@@ -1110,7 +1173,7 @@ export default {
   					.attr("x", width + 90)
   					.attr("y", 270)
   					.attr("dy", "-0.3em")
-  					.text(this.DotPlotData.docList[0].sampleKey["B"])
+  					.text(this.DotPlotData.sampleKey.sampleKey["B"])
             .attr("text-anchor", "middle")
       // gene ratio
      let legendCircle = svg.append("g").attr("transform", "translate("+ (width + 50) +", 500)")

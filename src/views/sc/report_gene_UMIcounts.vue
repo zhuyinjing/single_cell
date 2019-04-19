@@ -67,6 +67,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
       let xData = ['exons', 'intron.exon', 'introns'] // 分组
 
@@ -197,6 +198,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
       let xData = ['exons', 'intron.exon', 'introns'] // 分组
 

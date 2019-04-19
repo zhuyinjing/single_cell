@@ -6,7 +6,7 @@
 
         <el-button type="primary" size="medium" @click="createProjectDialog = true">+ 创建项目</el-button><br><br>
 
-        <el-card class="" shadow="hover">
+        <!-- <el-card class="" shadow="hover">
           <el-row :gutter="20">
             <el-col :span="2"><div class="grid-content bg-purple line-height-40">项目名称</div></el-col>
             <el-col :span="4"><div class="grid-content bg-purple">
@@ -32,7 +32,7 @@
             </div></el-col>
           </el-row>
         </el-card>
-        <br>
+        <br> -->
 
         <div class="">
           <table id="table" cellspacing="0" width="100%" class="display table table-striped table-bordered">

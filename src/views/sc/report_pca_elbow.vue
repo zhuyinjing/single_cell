@@ -61,6 +61,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
 
       var x = scattersvg.append("g").call(xAxis).attr("transform","translate("+ padding.left +"," + (height - padding.bottom) +")")

@@ -365,15 +365,15 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      let tooltip = d3.select('#container')
-      	.append('div')
-      	.style('position', 'absolute')
-        .style('z-index', '10')
-      	.style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '18px')
-      	.style('font-weight', 'bold')
-      	.text('')
+      // let tooltip = d3.select('#container')
+      // 	.append('div')
+      // 	.style('position', 'absolute')
+      //   .style('z-index', '10')
+      // 	.style('color', '#3497db')
+      //   .style('visibility', 'hidden')
+      //   .style('font-size', '18px')
+      // 	.style('font-weight', 'bold')
+      // 	.text('')
       let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
       let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
 

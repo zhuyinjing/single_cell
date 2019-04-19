@@ -174,6 +174,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
 
         let svg = violinsvg.append("g")
@@ -266,6 +267,7 @@ export default {
             .attr("cy", (d, i) => y(d[svgType]))
             .attr("r", 1.5)
             .attr("fill", "black")
+            .style("opacity", 0.2)
             .on('mouseover', function (d, i) {
               return tooltip.style('visibility', 'visible').text(d['cellId'])
             })

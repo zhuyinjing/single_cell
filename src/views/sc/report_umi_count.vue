@@ -65,6 +65,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},
           width = 400 - margin.left - margin.right,
@@ -193,6 +194,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},
           width = 400 - margin.left - margin.right,

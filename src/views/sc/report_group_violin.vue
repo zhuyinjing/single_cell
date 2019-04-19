@@ -17,15 +17,17 @@
 
       </el-tab-pane>
       <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
-        <div class="scatter">
+        <div class="scatter" style="white-space: nowrap;">
           <h3>特征基因表达值聚类图标记</h3>
           <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
           <div v-show="scatterSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
+            <el-button type="warning" size="small" @click="initScatterCluster()">显示 tSNE 图</el-button>
           </div>
 
-          <div id="scatterContainer"></div>
+          <div id="scatterContainer" style="display:inline-block"></div>
+          <div id="tSNEClusterDiv" style="display:inline-block"></div>
         </div>
       </el-tab-pane>
       <el-tab-pane style="overflow-x:auto" label="Heatmap" name="heatmapSvgShow">
@@ -377,7 +379,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#violinsvg').remove()
       }
-      let width = 600, height = 600 // 每个 g 标签的宽度/高度
+      let width = 110 * this.$store.state.commonInfo.clusterNameList.length, height = 600 // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:60}
       let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
@@ -463,6 +465,20 @@ export default {
                          .y(function(d){ return(y(d.x0)) } )
                          .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
             )
+            let x0 = Math.ceil(x(xData[j]))
+            let x1 = Math.floor(x(xData[j]) + x.bandwidth())
+
+            let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
+
+            svg.selectAll("g.circle")
+              .data(data)
+              .enter()
+              .append("circle")
+              .attr("cx", (d,i) => xLinear(randomData[i]))
+              .attr("cy", (d, i) => y(d[2]))
+              .attr("r", 1.5)
+              .attr("fill", "black")
+              .style("opacity", 0.2)
         }
 
         svg.append("text")
@@ -637,6 +653,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
       	.style('font-weight', 'bold')
+        .style('background', '#fff')
       	.text('')
       let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
 
@@ -694,12 +711,146 @@ export default {
            .text(tsneNum[1])
            .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
 
+         // 右侧颜色图例
+         var defs = svg.append("defs");
+
+       		var linearGradient = defs.append("linearGradient")
+       								.attr("id","linearColor" + this.selected[i])
+       								.attr("x1","0%")
+       								.attr("y1","0%")
+       								.attr("x2","100%")
+       								.attr("y2","0%");
+
+       		linearGradient.append("stop")
+       						.attr("offset","0%")
+       						.style("stop-color", d3Chromatic.interpolateReds(0));
+
+          linearGradient.append("stop")
+                  .attr("offset","50%")
+                  .style("stop-color", d3Chromatic.interpolateReds(0.5));
+
+       		linearGradient.append("stop")
+       						.attr("offset","100%")
+       						.style("stop-color", d3Chromatic.interpolateReds(1));
+
+       		//添加一个矩形，并应用线性渐变
+       		var colorRect = svg.append("rect")
+       					.attr("x", width - padding.right)
+       					.attr("y", padding.top)
+       					.attr("width", 60)
+       					.attr("height", 20)
+       					.style("fill","url(#" + linearGradient.attr("id") + ")")
+
+       		//添加文字
+       		var minValueText = svg.append("text")
+       					.attr("class","valueText")
+       					.attr("x", width - padding.right)
+       					.attr("y", padding.top + 40)
+       					.attr("dy", "-0.3em")
+                .attr("text-anchor", "middle")
+       					.text(() => d3.min(colorValue).toFixed(2));
+
+       		var maxValueText = svg.append("text")
+       					.attr("class","valueText")
+       					.attr("x", width - padding.right + 60)
+       					.attr("y", padding.top + 40)
+       					.attr("dy", "-0.3em")
+                .attr("text-anchor", "middle")
+       					.text(() => d3.max(colorValue).toFixed(2));
+
 
 
       }
 
     },
+    initScatterCluster () {
+      let self = this
+      let splitGroup
+      let hassvg = d3.selectAll('#clusterSvg')._groups[0].length
+      if (hassvg) {
+        return
+      }
+      let width = 800, height = 800
+      let padding = {top:30,right:120,bottom:60,left:60}
+      let clusterSvg = d3.select("#tSNEClusterDiv").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
+      let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
+      let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
+      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
+      let tooltip = d3.select('#container')
+        .append('div')
+        .style('position', 'absolute')
+        .style('z-index', '10')
+        .style('color', '#3497db')
+        .style('visibility', 'hidden')
+        .style('font-size', '18px')
+        .style('font-weight', 'bold')
+        .style('background', '#fff')
+        .text('')
 
+      let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
+      svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
+
+      let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
+      svg.append("g").call(d3.axisLeft(yScale))
+
+      svg.selectAll(".cicle")
+         .data(this.$store.state.commonInfo.cellId)
+         .enter()
+         .append("circle")
+         .attr("class", "clusterCircle")
+         .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
+         .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
+         .attr("r", 1.5)
+         .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
+         .on('mouseover', function (d, i) {
+           return tooltip.style('visibility', 'visible').text('cluster: ' + self.$store.state.commonInfo.clusterId[i])
+         })
+         .on('mousemove', function (d, i) {
+           return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
+         })
+         .on('mouseout', function (d, i) {
+           return tooltip.style('visibility', 'hidden')
+         })
+
+      //  上边 和 右边 两侧的 line
+      svg.append("line").attr("x1", 0).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",0).attr("stroke","black").attr("stroke-width","1px")
+      svg.append("line").attr("x1", width-padding.right-padding.left).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",height-padding.top-padding.bottom).attr("stroke","black").attr("stroke-width","1px")
+
+      // x 轴文字
+      clusterSvg.append("text")
+        .attr("transform", "translate("+ (width / 2) +", " + (height - 5) + ")")
+        .text(xText)
+        .attr("text-anchor", "middle")
+
+      // y 轴文字
+      clusterSvg.append("text")
+        .text(yText)
+        .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
+
+      let groupArr = this.$store.state.commonInfo.clusterNameList
+
+      //  分组颜色图例
+      let legendR = 8
+      let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
+      legend.selectAll(".circle")
+            .data(groupArr)
+            .enter()
+            .append("circle")
+            .attr("cx",0)
+            .attr("cy",(d,i) => i * 30)
+            .attr("r",legendR)
+            .attr("fill", d => colorScale(d))
+
+      legend.selectAll(".text")
+            .data(groupArr)
+            .enter()
+            .append("text")
+            .attr("transform",(d,i) => {
+              return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
+            })
+            .text(d => d)
+            .attr("class","groupText")
+    },
   }
 }
 </script>

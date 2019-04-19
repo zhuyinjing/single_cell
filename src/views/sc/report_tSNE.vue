@@ -296,6 +296,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
 
       let symbol = d3.symbol().size([50])
@@ -386,6 +387,7 @@ export default {
         .style('visibility', 'hidden')
         .style('font-size', '18px')
         .style('font-weight', 'bold')
+        .style('background', '#fff')
         .text('')
 
       let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()

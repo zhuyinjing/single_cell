@@ -50,7 +50,7 @@ export default {
         .text('')
       var margin = {top: 10, right: 120, bottom: 30, left: 60},
           width = 1000 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
+          height = 600 - margin.top - margin.bottom;
 
       let xData = ["exon", "intron", "Ambiguity", "Intergenic", "Unmapped", "NA"]
 

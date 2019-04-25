@@ -452,8 +452,8 @@ export default {
         // }
         return
       }
-      if (this.selected.length > 1) {
-        this.$message.error("最多选择 1 个基因！")
+      if (this.selected.length > 2) {
+        this.$message.error("最多选择 2 个基因！")
         return
       }
       this.axios.get('/singel_cell/server/get_gene_violin_plot?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&geneId=' + this.selected.join(',')).then((res) => {

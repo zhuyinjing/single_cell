@@ -124,6 +124,10 @@ let router = [
         path: 'CCA_inner_list',
         name: 'CCA_inner_list',
         component: resolve => require(['@/views/sc/CCA/CCA_inner_list'], resolve)
+      },{
+        path: 'CCA_tSNE_transition',
+        name: 'CCA_tSNE_transition',
+        component: resolve => require(['@/views/sc/CCA/CCA_tSNE_transition'], resolve)
       },
     ]
   }

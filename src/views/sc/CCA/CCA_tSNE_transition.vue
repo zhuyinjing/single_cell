@@ -4,12 +4,12 @@
     <p>tSNE可以基于筛选后主成分进一步降维，然后对细胞进行聚类。完成聚类后，可根据实际的生物学问题，深入研究各类细胞之间的异同，及其背后的生物学意义。</p>
 
     <div id="svgContainer">
-      <div class="svgBox">
+      <!-- <div class="svgBox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE样本标记图', 'sampleContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
         <div id="sampleContainer"></div>
-      </div>
+      </div> -->
 
       <div class="svgBox">
         <!-- <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="mergeDialogShow = true">合并组</el-button>
@@ -19,6 +19,16 @@
 
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
+
+
+        <el-select size="small" v-model="clusterValue" @change="selectChange">
+          <el-option
+            v-for="item in $store.state.commonInfo.clusterNameList"
+            :key="item"
+            :label="item"
+            :value="item">
+          </el-option>
+        </el-select>
 
         <el-select size="small" v-model="sampleValue" @change="selectChange">
           <el-option
@@ -139,6 +149,7 @@ export default {
       sampleValue: '',
       timer: '',
       pauseBtnShow: true,
+      clusterValue: '',
     }
   },
   components: {
@@ -161,6 +172,7 @@ export default {
     if (this.message) {
       this.message.close()
     }
+    window.clearInterval(this.timer)
   },
   methods: {
     getDBdata () {
@@ -183,19 +195,29 @@ export default {
       }
     },
     selectChange () { // 选中的样本组的 circle 高亮
+      if (this.clusterValue) {
+        let indexArr =  []
+        this.$store.state.commonInfo.clusterId.map((d, i) => {
+          if (d === this.clusterValue) {
+            indexArr.push(i)
+          }
+        })
+        this.initScatterCluster(indexArr)
+      }
+
       window.clearInterval(this.timer)
       this.pauseBtnShow = true
-      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[i] === this.sampleValue)
+      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[d] === this.sampleValue)
 
       if (circles._groups[0].length !== 0) {
         this.timer = setInterval(() => {
           circles.transition()
-            .duration(2000)
+            .duration(1000)
             .attr('r', 3)
             .transition()
-            .duration(2000)
+            .duration(1000)
             .attr('r', 1.5)
-        }, 4000)
+        }, 2000)
       }
     },
     initData () {
@@ -203,7 +225,7 @@ export default {
       this.axios.get('/singel_cell/server/get_tsne_score?username='+ this.$store.state.username +'&p=' + this.$store.state.projectId).then((res) => {
         if (res.data.message_type === 'success') {
           this.data = res.data
-          this.initScatterSample()
+          // this.initScatterSample()
           this.initScatterCluster()
         } else {
           this.$message.error(res.data.message)
@@ -368,19 +390,18 @@ export default {
             .text(d => d.groupName)
 
     },
-    initScatterCluster () {
+    initScatterCluster (indexArr) {
       let self = this
       let splitGroup
       let hassvg = d3.selectAll('#clusterSvg')
       if (hassvg) {
         d3.selectAll('#clusterSvg').remove()
       }
-      let width = 800, height = 800
+      let width = 1500, height = 1000
       let padding = {top:30,right:120,bottom:60,left:60}
       let clusterSvg = d3.select("#clusterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
-      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
       let tooltip = d3.select('#container')
         .append('div')
         .style('position', 'absolute')
@@ -391,6 +412,8 @@ export default {
         .style('font-weight', 'bold')
         .style('background', '#fff')
         .text('')
+
+      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
 
       // 分组名称显示（在每组的中心位置）
       let groupArr = this.$store.state.commonInfo.clusterNameList
@@ -432,30 +455,59 @@ export default {
             .text(d => d)
             .attr("class","groupText")
 
-      let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
-      svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
+      if (!indexArr) {
+        let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
+        svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
 
-      let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
-      svg.append("g").call(d3.axisLeft(yScale))
+        let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
+        svg.append("g").call(d3.axisLeft(yScale))
 
-      svg.selectAll(".cicle")
-         .data(this.$store.state.commonInfo.cellId)
-         .enter()
-         .append("circle")
-         .attr("class", "clusterCircle")
-         .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
-         .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
-         .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
-         .on('mouseover', function (d, i) {
-           return tooltip.style('visibility', 'visible').text(d)
-         })
-         .on('mousemove', function (d, i) {
-           return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-         })
-         .on('mouseout', function (d, i) {
-           return tooltip.style('visibility', 'hidden')
-         })
+        svg.selectAll(".cicle")
+           .data(this.$store.state.commonInfo.cellId)
+           .enter()
+           .append("circle")
+           .attr("class", "clusterCircle")
+           .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
+           .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
+           .attr("r", 1.5)
+           .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
+           .on('mouseover', function (d, i) {
+             return tooltip.style('visibility', 'visible').text(d)
+           })
+           .on('mousemove', function (d, i) {
+             return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
+           })
+           .on('mouseout', function (d, i) {
+             return tooltip.style('visibility', 'hidden')
+           })
+      } else {
+        let xValueArr = indexArr.map(d => this.$store.state.commonInfo[xText][d])
+        let yValueArr = indexArr.map(d => this.$store.state.commonInfo[yText][d])
+        let xScale = d3.scaleLinear().domain(d3.extent(xValueArr)).range([0,width - padding.left - padding.right]).nice()
+        svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
+
+        let yScale = d3.scaleLinear().domain(d3.extent(yValueArr)).range([height - padding.top - padding.bottom,0]).nice()
+        svg.append("g").call(d3.axisLeft(yScale))
+
+        svg.selectAll(".clusterCicle")
+           .data(indexArr)
+           .enter()
+           .append("circle")
+           .attr("class", "clusterCircle")
+           .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][d]))
+           .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][d]))
+           .attr("r", 1.5)
+           .attr("fill", (d,i) => {return colorScale(this.$store.state.commonInfo.clusterId[d])})
+           .on('mouseover', (d, i) => {
+             return tooltip.style('visibility', 'visible').text(this.$store.state.commonInfo.cellId[d])
+           })
+           .on('mousemove', function (d, i) {
+             return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
+           })
+           .on('mouseout', function (d, i) {
+             return tooltip.style('visibility', 'hidden')
+           })
+      }
 
       //  上边 和 右边 两侧的 line
       svg.append("line").attr("x1", 0).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",0).attr("stroke","black").attr("stroke-width","1px")
@@ -471,6 +523,47 @@ export default {
       clusterSvg.append("text")
         .text(yText)
         .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
+
+      // // 分组名称显示（在每组的中心位置）
+      // let groupArr = this.$store.state.commonInfo.clusterNameList
+      // this.groupArr = groupArr
+      // this.mergeGroup = []
+      // //  更改组名的 form 表单内容 eg: { 原组名1: ‘’, 原组名2: ''}
+      // this.changeNameForm = {}
+      // this.groupArr.map((item) => this.changeNameForm[item] = '')
+      //
+      // // let groupPointText = svg.selectAll(".text")
+      // //           .data(groupArr)
+      // //           .enter()
+      // //           .append("text")
+      // //           .attr("transform",d => "translate("+ xScale(this.data.avgMap[d][xText]) +","+ yScale(this.data.avgMap[d][yText]) +")")
+      // //           .text(d => d)
+      // //           .attr("fill","black")
+      // //           .attr("text-anchor", "middle")
+      // //           .classed("groupText",true)
+      //
+      // //  分组颜色图例
+      // let legendR = 8
+      // let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
+      // legend.selectAll(".circle")
+      //       .data(groupArr)
+      //       .enter()
+      //       .append("circle")
+      //       .attr("cx",0)
+      //       .attr("cy",(d,i) => i * 30)
+      //       .attr("r",legendR)
+      //       .attr("fill", d => colorScale(d))
+      //
+      // legend.selectAll(".text")
+      //       .data(groupArr)
+      //       .enter()
+      //       .append("text")
+      //       .attr("transform",(d,i) => {
+      //         return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
+      //       })
+      //       .text(d => d)
+      //       .attr("class","groupText")
+
 
       let brush = d3.brush().extent([[0,0],[width - padding.left - padding.right,height - padding.top - padding.bottom]]).on("brush", brushing).on("end", brushend)
 

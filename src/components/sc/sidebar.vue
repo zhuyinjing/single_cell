@@ -47,6 +47,7 @@
       <el-menu-item-group>
         <span slot="" class="title-style">聚类分析</span>
         <router-link to="/sc/CCA_tSNE"><el-menu-item index="CCA_tSNE">t-SNE 图</el-menu-item></router-link>
+        <router-link to="/sc/CCA_tSNE_transition"><el-menu-item index="CCA_tSNE_transition">t-SNE 图 (动效)</el-menu-item></router-link>
       </el-menu-item-group>
       <el-menu-item-group>
         <span slot="" class="title-style">类间特征基因表达分析</span>

@@ -2,19 +2,7 @@
   <div id="container">
     <h2>类间特征基因表达分析</h2>
     <p>决定细胞不同聚类之间的关键因素是基因表达差异，而基因表达差异又可以反映出不同聚类间的生物学差异。因此，基于tSNE聚类，可以进行深入的基因表达差异分析，并与生物学意义做关联。</p>
-    <el-tabs v-model="activeTab" v-show="violinSvgShow || heatmapSvgShow || scatterSvgShow || DotPlotSvgShow">
-      <el-tab-pane style="overflow-x:auto" label="VliPlot" name="violinSvgShow">
-        <div class="violin">
-          <h3>特征基因表达值分布</h3>
-          <p>如下所示，小提琴图展示了特征基因在不同tSNE聚类中的表达量分布。横坐标标识不同tSNE聚类，纵坐标表示基因的UMI数目，每个点代表一个细胞。</p>
-          <div v-show="violinSvgShow">
-            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['violin', 'violinContainer'])">{{$t('button.svg')}}</el-button>
-            <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
-          </div>
-
-          <div id="violinContainer"></div>
-        </div>
-      </el-tab-pane>
+    <el-tabs v-model="activeTab" v-show="scatterSvgShow || DotPlotSvgShow">
       <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
         <div class="scatter" style="white-space: nowrap;">
           <h3>特征基因表达值聚类图标记</h3>
@@ -27,18 +15,6 @@
 
           <div id="scatterContainer" style="display:inline-block"></div>
           <div id="tSNEClusterDiv" style="display:inline-block"></div>
-        </div>
-      </el-tab-pane>
-      <el-tab-pane style="overflow-x:auto" label="Heatmap" name="heatmapSvgShow">
-        <div class="heatmap">
-          <h3>特征基因群表达值热图</h3>
-          <p>如下热图所示，每一列代表一个细胞，每一行代表一个特征基因，每一个色块代表相应基因在相应细胞中的表达量，紫色代表低表达量，黄色代表高表达量。每个细胞所属的聚类也被标记在热图的下方。基于这个结果，可以对决定不同聚类的特征基因群做功能富集分析。</p>
-          <div v-show="heatmapSvgShow">
-            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['heatmap', 'heatmapContainer'])">{{$t('button.svg')}}</el-button>
-            <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
-          </div>
-
-          <div id="heatmapContainer"></div>
         </div>
       </el-tab-pane>
       <el-tab-pane style="overflow-x:auto" label="DotPlot" name="DotPlotSvgShow">
@@ -57,9 +33,7 @@
     <br>
 
     <el-card class="" shadow="hover">
-      <el-button type="primary" size="middle" @click="initViolinData()">VlnPlot</el-button>
       <el-button type="danger" size="middle" @click="initScatterData()">FeaturePlot</el-button>
-      <el-button type="danger" size="middle" @click="initHeatmapData()">Heatmap</el-button>
       <el-button type="primary" size="middle" @click="initDotPlotData()">DotPlot</el-button>
     </el-card>
 
@@ -177,13 +151,10 @@ export default {
       pct1EndB: '',
       pct2StartB: '',
       pct2EndB: '',
-      violinSvgShow: false,
       data: [],
       table: null,
       selected: [],
       currentData: [],
-      heatmapSvgShow: false,
-      heatmapData: [],
       scatterSvgShow: false,
       scatterData: [],
       filterMethod: false,
@@ -439,263 +410,6 @@ export default {
           self.table = table
 
         })
-    },
-    initViolinData () {
-      if (this.selected.length === 0) {
-        // let hassvg = d3.selectAll('#violinsvg')._groups[0].length
-        // // 如果取消 checkbox 选中 再点击生成小提琴图 则清除 svg
-        // if (hassvg) {
-        //   d3.selectAll('#violinsvg').remove()
-        //   this.violinSvgShow = false
-        // } else {
-          this.$message.error("请选择您要生成小提琴图的基因！")
-        // }
-        return
-      }
-      if (this.selected.length > 2) {
-        this.$message.error("最多选择 2 个基因！")
-        return
-      }
-      this.axios.get('/singel_cell/server/get_gene_violin_plot?p='+ this.$store.state.projectId +'&username=' + this.$store.state.username + '&geneId=' + this.selected.join(',')).then((res) => {
-        if (res.data.message_type === 'success') {
-          this.data = res.data
-          this.initViolin()
-        } else {
-          this.$message.error(res.data.message)
-        }
-      })
-    },
-    initViolin () {
-      // 生成 svg 的按钮
-      this.violinSvgShow = true
-      this.activeTab = 'violinSvgShow' // tab 被激活
-      let self = this
-      let hassvg = d3.selectAll('#violinsvg')._groups[0].length
-      if (hassvg) {
-        d3.selectAll('#violinsvg').remove()
-      }
-      let width = 110 * this.$store.state.commonInfo.clusterNameList.length, height = 600 // 每个 g 标签的宽度/高度
-      let padding = {top:30,right:80,bottom:60,left:60}
-      // let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
-      let number = 1
-      let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
-      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-
-      let xData = this.data.clusterNameList // 分组
-
-      for (let i = 0;i < this.selected.length;i++) {
-        let svg = violinsvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
-
-        var yValueArr = this.data[this.selected[i]].map(item => item[2])
-
-        // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
-        var x = d3.scaleBand()
-          .range([ padding.left, width - padding.right ])
-          .domain(xData)
-          .padding(0.05)     // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum..
-        svg.append("g")
-          .attr("transform", "translate(0" +"," + (height - padding.bottom) + ")")
-          .call(d3.axisBottom(x))
-
-        // Build and Show the Y scale
-        var y = d3.scaleLinear()
-          .domain(d3.extent(yValueArr))          // Note that here the Y scale is set manually
-          .range([height - padding.bottom, padding.top]).nice()
-
-        svg.append("g")
-           .attr("transform", "translate("+ padding.left +",0)")
-           .call(d3.axisLeft(y))
-
-        // 随机散点
-        var xLinear = d3.scaleLinear().domain([0,width]).range([0,width])
-
-        // 每个图 按分组去画 violin plot
-        for (let j = 0;j < xData.length;j++) {
-          var data = this.data[this.selected[i]].filter(item => item[1] === xData[j])
-
-          var yData = data.map(item => item[2])
-
-          // Features of the histogram
-          var histogram = d3.histogram()
-              .domain(d3.extent(yData))
-              .thresholds(y.ticks(20))    // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
-              .value(d => d)
-          var input, bins,allBins,lengths,longuest
-          // Compute the binning for each group of the dataset
-          var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d[1];})
-              .rollup(function(d) {   // For each key..
-                input = d.map(function(d) { return d[2];})    // Keep the variable called Sepal_Length
-                bins = histogram(input)   // And compute the binning on it.
-                return(bins)
-              })
-              .entries(data)
-
-          // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
-          var maxNum = 0
-          for (let k = 0;k < sumstat.length;k++){
-            allBins = sumstat[k].value
-            lengths = allBins.map(function(a){return a.length;})
-            longuest = d3.max(lengths)
-            if (longuest > maxNum) { maxNum = longuest }
-          }
-          // The maximum width of a violin must be x.bandwidth = the width dedicated to a group
-          var xNum = d3.scaleLinear()
-            .range([0, x.bandwidth()])
-            .domain([-maxNum,maxNum])
-
-          // Add the shape to this svg!
-          svg
-            .selectAll("myViolin")
-            .data(sumstat)
-            .enter()        // So now we are working group per group
-            .append("g")
-            .attr("transform", function(d){ return("translate(" + x(d.key) +" ,0)") } ) // Translation on the right to be at the group position
-            .append("path")
-            .datum(function(d){ return(d.value)})     // So now we are working bin per bin
-            .style("stroke", "black")
-            .style("fill",(d,i) => colorScale(j))
-            .attr("d", d3.area()
-                         .x0(function(d){ return(xNum(-d.length)) } )
-                         .x1(function(d){ return(xNum(d.length)) } )
-                         .y(function(d){ return(y(d.x0)) } )
-                         .curve(d3.curveCatmullRom)    // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
-            )
-            let x0 = Math.ceil(x(xData[j]))
-            let x1 = Math.floor(x(xData[j]) + x.bandwidth())
-
-            let randomData = d3.range(yData.length).map(d => d3.randomUniform(x0, x1)())
-
-            svg.selectAll("g.circle")
-              .data(data)
-              .enter()
-              .append("circle")
-              .attr("cx", (d,i) => xLinear(randomData[i]))
-              .attr("cy", (d, i) => y(d[2]))
-              .attr("r", 1.5)
-              .attr("fill", "black")
-              .style("opacity", 0.2)
-        }
-
-        svg.append("text")
-          .attr("transform", "translate("+ (width / 2) +", "+ padding.top/2 +")")
-          .text(this.data[this.selected[i]][0][0])
-          .attr("text-anchor", "middle")
-          .attr("font-size", "16px")
-      }
-    },
-    initHeatmapData () {
-      if (this.selected.length === 0) {
-        this.$message.error("请选择您要生成热图的基因！")
-        return
-      }
-      this.axios.get('singel_cell/server/get_gene_tsne_heatmap?p='+ this.$store.state.projectId +'&username='+ this.$store.state.username +'&geneId='+ this.selected.join(',')).then((res) => {
-        if (res.data.message_type === 'success') {
-          this.heatmapData = res.data
-          this.initHeatmap()
-        } else {
-          this.$message.error(res.data.message)
-        }
-      })
-    },
-    initHeatmap () {
-      // 生成 svg 的按钮
-      this.heatmapSvgShow = true
-      this.activeTab = 'heatmapSvgShow' // tab 被激活
-
-      let self = this
-      let hassvg = d3.selectAll('#heatmapsvg')._groups[0].length
-      if (hassvg) {
-        d3.selectAll('#heatmapsvg').remove()
-      }
-      let padding = {top:50,right:5,bottom:30,left:0}
-      let width = 1.5, height = 15  // 每个 rect 的宽度/高度
-      let xData = this.heatmapData.groupNum // 一共有几个分组，画几个 g 标签
-      let cellNumber = 0
-      this.heatmapData.groupNum.map(item => {
-        cellNumber+=this.heatmapData[item].cellIdList.length // 获取 cell 的总个数，为了确定 svg 的 width
-      })
-      let yTextPadding = 100 // 右侧文字所占空间的 width
-      let svgWidth = width * cellNumber + (padding.left + padding.right) * xData.length + yTextPadding
-      let svgHeight = height * this.selected.length + padding.top + padding.bottom
-      let heatmapsvg = d3.select("#heatmapContainer").append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", "heatmapsvg")
-      let colorValueArr = [] // 把所有分组拼接到一起，为了求所有数据的最大值和最小值 当作 colorScale 的值域
-      xData.map(item => {
-        colorValueArr = colorValueArr.concat(this.heatmapData[item]['umiMatrixList'])
-      })
-      let colorScale = d3.scaleSequential().domain(d3.extent(colorValueArr.map(d => d.umiValue))).interpolator(d3.interpolatePlasma)
-
-      let lastWidth = 0 // 记录之前所有的 width
-      for (let i = 0;i < xData.length;i++) {
-        i === 0? lastWidth = 0 :lastWidth += this.heatmapData[xData[i - 1]].cellIdList.length * width
-        let rectData = this.heatmapData[xData[i]].umiMatrixList
-        let cellLength = this.heatmapData[xData[i]]['cellIdList'].length
-        let geneLength = this.heatmapData[xData[i]]['geneIdList'].length
-
-        let w = lastWidth + (padding.right + padding.left) * i  // 每个 g 的位移
-        let h = padding.top
-        let svg = heatmapsvg.append("g").attr("transform", "translate("+ w + "," + h +")")
-
-        svg.selectAll("rect")
-           .data(rectData)
-           .enter()
-           .append("rect")
-           .attr("x", (d,i) => width * (i % cellLength))
-           .attr("y", (d,i) => height * parseInt(i / cellLength))
-           .attr("width", width)
-           .attr("height", height)
-           .attr("fill", (d,i) => colorScale(d.umiValue))
-
-         // x 轴文字
-         svg.append("text")
-           .attr("transform", "translate("+ (width * cellLength / 2) +", " + (height * geneLength + 20) + ")")
-           .text(xData[i])
-           .attr("text-anchor", "middle")
-           .attr("font-size", "16px")
-
-      }
-
-      // y 轴文字
-      heatmapsvg.append("g")
-         .attr("transform", (d,i) => {return "translate("+ (svgWidth - yTextPadding) +", " + padding.top + ")"})
-         .selectAll(".text")
-         .data(this.heatmapData[xData[0]].geneNameList)
-         .enter()
-         .append("text")
-         .attr("transform", (d,i) => {return "translate("+ 0 +", " + ((i + 1) * height) + ")"})
-         .text(d => d)
-         .attr("font-size", height +"px")
-
-      let defs = heatmapsvg.append("defs");
-
-      let linearGradient = defs.append("linearGradient")
-  								.attr("id","linearColor")
-  								.attr("x1","0%")
-  								.attr("y1","0%")
-  								.attr("x2","100%")
-  								.attr("y2","0%");
-      linearGradient.append("stop")
-  						      .attr("offset","0%")
-  						      .style("stop-color",d3.interpolatePlasma(0));
-
-      linearGradient.append("stop")
-  						      .attr("offset","50%")
-  						      .style("stop-color",d3.interpolatePlasma(0.5));
-
-  		linearGradient.append("stop")
-        						.attr("offset","100%")
-        						.style("stop-color",d3.interpolatePlasma(1));
-
-      heatmapsvg.append("g")
-                .attr("transform","translate("+ 0 +","+ 5 +")")
-                .attr("id", "legend")
-                .append("rect")
-      					.attr("x", 0)
-      					.attr("y", 0)
-      					.attr("width", 100)
-      					.attr("height", 30)
-      					.style("fill","url(#" + linearGradient.attr("id") + ")")
-
     },
     initScatterData () {
       if (this.selected.length === 0) {

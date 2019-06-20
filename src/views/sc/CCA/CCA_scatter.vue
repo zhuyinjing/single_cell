@@ -14,6 +14,10 @@
 
     &nbsp;&nbsp;&nbsp;
     {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="initD3()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="initD3()"></el-input-number>
 
     <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['PCA', 'd3container'])">{{$t('button.svg')}}</el-button>
     <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -34,9 +38,11 @@ export default {
       pcList: [],
       pcArr: [],
       data: null,
-      radius: 2,
+      radius: 1.5,
       opacity: 1,
-      loading: false
+      loading: false,
+      width: 800,
+      height: 800,
     }
   },
   components: {
@@ -83,17 +89,13 @@ export default {
       })
     },
     initD3() {
-      if (this.pcArr.length > 10) {
-        this.$message('最多选择10个PC，请修改您的选项！')
-        return
-      }
       let hassvg = d3.selectAll('.d3pcasvg')
       if (hassvg) {
         d3.selectAll('.d3pcasvg').remove()
       }
       let self = this
-      var initWidth = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
-      var initHeight = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
+      var initWidth = this.pcArr.length > 8 ? this.pcArr.length * 100 : this.width
+      var initHeight = this.pcArr.length > 8 ? this.pcArr.length * 100 : this.height
 
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
 

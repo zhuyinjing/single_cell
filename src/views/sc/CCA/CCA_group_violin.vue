@@ -7,6 +7,13 @@
         <div class="scatter" style="white-space: nowrap;">
           <h3>特征基因表达值聚类图标记</h3>
           <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
+
+          {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
           <div v-show="scatterSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -163,6 +170,9 @@ export default {
       clusterRadio: null,
       DotPlotSvgShow: false,
       DotPlotData: [],
+      radius: 1.5,
+      width: 800,
+      height: 800,
     }
   },
   components: {
@@ -446,7 +456,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      let width = 800, height = 800 // 每个 g 标签的宽度/高度
+      let width = this.width, height = this.height // 每个 g 标签的宽度/高度
       let padding = {top:50,right:80,bottom:40,left:60}
       let number = this.selected.length // 一行显示几个图
       let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
@@ -485,8 +495,9 @@ export default {
            .append("circle")
            .attr("cx", (d,i) => xScale(xData[i]))
            .attr("cy", (d,i) => yScale(yData[i]))
-           .attr("r", 1.5)
+           .attr("r", this.radius)
            .attr("fill", (d,i) => colorScale(colorValue[i]))
+           .attr("class", "clusterCircle")
            .on('mouseover', function (d, i) {
                return tooltip.style('visibility', 'visible').text(colorValue[i])
              })
@@ -571,9 +582,9 @@ export default {
       let splitGroup
       let hassvg = d3.selectAll('#clusterSvg')._groups[0].length
       if (hassvg) {
-        return
+        d3.selectAll('#clusterSvg').remove()
       }
-      let width = 800, height = 800
+      let width = this.width, height = this.height
       let padding = {top:30,right:120,bottom:60,left:60}
       let clusterSvg = d3.select("#tSNEClusterDiv").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
@@ -603,7 +614,7 @@ export default {
          .attr("class", "clusterCircle")
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
+         .attr("r", this.radius)
          .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text('cluster: ' + self.$store.state.commonInfo.clusterId[i])
@@ -914,7 +925,15 @@ export default {
   					.attr("dy", "-0.3em")
   					.text("pct.exp");
     },
-
+    changeRadius () {
+      d3.selectAll(".clusterCircle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initScatter()
+      if (d3.selectAll('#clusterSvg')._groups[0].length) {
+        this.initScatterCluster()
+      }
+    },
   }
 }
 </script>

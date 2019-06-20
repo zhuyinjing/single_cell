@@ -3,6 +3,12 @@
     <h2>tSNE 聚类</h2>
     <p>tSNE可以基于筛选后主成分进一步降维，然后对细胞进行聚类。完成聚类后，可根据实际的生物学问题，深入研究各类细胞之间的异同，及其背后的生物学意义。</p>
 
+    {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
     <div id="svgContainer">
       <!-- <div class="svgBox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE样本标记图', 'sampleContainer'])">{{$t('button.svg')}}</el-button>
@@ -11,13 +17,13 @@
         <div id="sampleContainer"></div>
       </div> -->
 
-      <div class="svgBox">
+      <div class="">
         <!-- <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="mergeDialogShow = true">合并组</el-button>
         <el-button type="primary" size="small" icon="el-icon-edit-outline" @click="splitDialogShow = true">拆分组</el-button> -->
         <el-button type="warning" size="small" icon="el-icon-edit" @click="changeNameDialogShow = true">更改组名</el-button>
         <!-- <el-button type="primary" size="small" icon="el-icon-refresh" @click="originGroup()">恢复原始数据</el-button> -->
 
-        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer'])">{{$t('button.svg')}}</el-button>
+        <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE聚类标记图', 'clusterContainer2'])">{{$t('button.svg')}}</el-button>
         <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
 
@@ -51,6 +57,7 @@
           </svg>
         </el-button>
 
+        <el-button type="" size="mini" icon="el-icon-refresh" @click="undo()"></el-button>
 
 
 
@@ -61,7 +68,7 @@
           <el-button type="danger" size="small" id="saveBtn">保存</el-button>
         </span> -->
 
-        <div id="clusterContainer"></div>
+        <div id="clusterContainer2"></div>
       </div>
     </div>
 
@@ -150,11 +157,16 @@ export default {
       timer: '',
       pauseBtnShow: true,
       clusterValue: '',
+      radius: 1.5,
+      width: null,
+      height: 1000,
+      indexArr: null
     }
   },
   components: {
   },
   mounted() {
+    this.width = document.getElementById("clusterContainer2").clientWidth
     bus.$on("initScatterCluster", () => {
       this.initScatterCluster()
     })
@@ -202,21 +214,22 @@ export default {
             indexArr.push(i)
           }
         })
+        this.indexArr = indexArr
         this.initScatterCluster(indexArr)
       }
 
       window.clearInterval(this.timer)
       this.pauseBtnShow = true
-      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.data.sampleId[d] === this.sampleValue)
+      let circles = d3.selectAll(".clusterCircle").filter((d, i) => this.clusterValue ? this.data.sampleId[d] === this.sampleValue : this.data.sampleId[i] === this.sampleValue)
 
       if (circles._groups[0].length !== 0) {
         this.timer = setInterval(() => {
           circles.transition()
             .duration(1000)
-            .attr('r', 3)
+            .attr('r', this.radius * 3)
             .transition()
             .duration(1000)
-            .attr('r', 1.5)
+            .attr('r', this.radius)
         }, 2000)
       }
     },
@@ -300,96 +313,6 @@ export default {
         this.changeNameDialogShow = false
       })
     },
-    initScatterSample () {
-      let self = this
-      let splitGroup
-      let hassvg = d3.selectAll('#sampleSvg')
-      if (hassvg) {
-        d3.selectAll('#sampleSvg').remove()
-      }
-      let width = 800, height = 800
-      let padding = {top:30,right:120,bottom:60,left:60}
-      let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
-      let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
-      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
-      let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
-      let tooltip = d3.select('#container')
-        .append('div')
-        .style('position', 'absolute')
-        .style('z-index', '10')
-        .style('color', '#3497db')
-        .style('visibility', 'hidden')
-        .style('font-size', '18px')
-        .style('font-weight', 'bold')
-        .style('background', '#fff')
-        .text('')
-
-      let symbol = d3.symbol().size([50])
-
-      let xScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[xText])).range([0,width - padding.left - padding.right]).nice()
-      svg.append("g").attr("transform","translate(0,"+ (height - padding.bottom - padding.top) +")").call(d3.axisBottom(xScale))
-
-      let yScale = d3.scaleLinear().domain(d3.extent(this.$store.state.commonInfo[yText])).range([height - padding.top - padding.bottom,0]).nice()
-      svg.append("g").call(d3.axisLeft(yScale))
-
-      //  上边 和 右边 两侧的 line
-      svg.append("line").attr("x1", 0).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",0).attr("stroke","black").attr("stroke-width","1px")
-      svg.append("line").attr("x1", width-padding.right-padding.left).attr("y1", 0).attr("x2",width-padding.right-padding.left).attr("y2",height-padding.top-padding.bottom).attr("stroke","black").attr("stroke-width","1px")
-
-      svg.selectAll(".cicle")
-         .data(this.$store.state.commonInfo.cellId)
-         .enter()
-         .append("circle")
-         .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
-         .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
-         .attr("fill", (d,i) => colorScale(self.data.sampleId[i]))
-         .on('mouseover', function (d, i) {
-           return tooltip.style('visibility', 'visible').text(d)
-         })
-         .on('mousemove', function (d, i) {
-           return tooltip.style('top', (d3.event.pageY-10)+'px').style('left',(d3.event.pageX+10)+'px')
-         })
-         .on('mouseout', function (d, i) {
-           return tooltip.style('visibility', 'hidden')
-         })
-
-      // x 轴文字
-      sampleSvg.append("text")
-        .attr("transform", "translate("+ (width / 2) +", " + (height - 5) + ")")
-        .text(xText)
-        .attr("text-anchor", "middle")
-
-      // y 轴文字
-      sampleSvg.append("text")
-        .text(yText)
-        .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
-
-      let groupArr = this.data.groupName
-      this.groupArr = groupArr
-
-      //  分组颜色图例
-      let legendR = 8
-      let legend = sampleSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
-      legend.selectAll(".circle")
-            .data(groupArr)
-            .enter()
-            .append("circle")
-            .attr("cx",0)
-            .attr("cy",(d,i) => i * 30)
-            .attr("r",legendR)
-            .attr("fill", d => colorScale(d.groupName))
-
-      legend.selectAll(".text")
-            .data(groupArr)
-            .enter()
-            .append("text")
-            .attr("transform",(d,i) => {
-              return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
-            })
-            .text(d => d.groupName)
-
-    },
     initScatterCluster (indexArr) {
       let self = this
       let splitGroup
@@ -397,9 +320,9 @@ export default {
       if (hassvg) {
         d3.selectAll('#clusterSvg').remove()
       }
-      let width = 1500, height = 1000
+      let width = this.width, height = this.height
       let padding = {top:30,right:120,bottom:60,left:60}
-      let clusterSvg = d3.select("#clusterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
+      let clusterSvg = d3.select("#clusterContainer2").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory20)
       let tooltip = d3.select('#container')
@@ -469,7 +392,7 @@ export default {
            .attr("class", "clusterCircle")
            .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
            .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-           .attr("r", 1.5)
+           .attr("r", this.radius)
            .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
            .on('mouseover', function (d, i) {
              return tooltip.style('visibility', 'visible').text(d)
@@ -496,7 +419,7 @@ export default {
            .attr("class", "clusterCircle")
            .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][d]))
            .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][d]))
-           .attr("r", 1.5)
+           .attr("r", this.radius)
            .attr("fill", (d,i) => {return colorScale(this.$store.state.commonInfo.clusterId[d])})
            .on('mouseover', (d, i) => {
              return tooltip.style('visibility', 'visible').text(this.$store.state.commonInfo.cellId[d])
@@ -741,6 +664,21 @@ export default {
        }).catch(() => {});
       })
 
+    },
+    undo () {
+      window.clearInterval(this.timer)
+      this.indexArr = null
+      this.width = document.getElementById("clusterContainer2").clientWidth
+      this.height = 1000
+      this.sampleValue = ''
+      this.clusterValue = ''
+      this.initScatterCluster()
+    },
+    changeRadius () {
+      d3.selectAll(".clusterCircle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initScatterCluster(this.indexArr)
     },
   }
 }

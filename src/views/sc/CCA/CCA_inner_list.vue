@@ -30,6 +30,11 @@
         <div class="scatter">
           <h3>特征基因表达值聚类图标记</h3>
           <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
+
+          {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
           <div v-show="scatterSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -149,6 +154,8 @@ export default {
       violinSvgShow: false,
       heatmapSvgShow: false,
       heatmapData: [],
+      width: 600,
+      radius: 1.5
     }
   },
   components: {
@@ -648,7 +655,7 @@ export default {
       let tsneNum = this.$store.state.commonInfo.tsneNumList.tsneNum // ["tSNE_1", "tSNE_2"]
       let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
 
-      var size = 600,
+      var size = this.width,
           padding = 20;
 
       var x = d3.scaleLinear()
@@ -747,7 +754,8 @@ export default {
             .enter().append("circle")
             .attr("cx", (d,i) => x(xData[i]))
             .attr("cy", (d,i) => y(yData[i]))
-            .attr("r", 1.5)
+            .attr("r", self.radius)
+            .attr("class", "scatterCircle")
             .style("fill", (d, i) => {
               return color(0)
               // let index = rectIdList.findIndex(item => item === d)
@@ -768,6 +776,12 @@ export default {
 
             rectIdList.map((item, index) => d3.select("#" + item + p).style("fill", color(rectUMIList[index])))
       }
+    },
+    changeRadius () {
+      d3.selectAll(".scatterCircle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initScatter()
     },
 
   }

@@ -47,7 +47,7 @@ export default {
   components: {
   },
   mounted () {
-    // this.selectTask()
+    this.selectTask()
   },
   destroyed () {
     window.clearInterval(this.timer)
@@ -85,7 +85,7 @@ export default {
           this.reportBtnShow = true
         }
         this.runTask()
-      })
+      }).catch(e => this.$message.error('请求出错！'))
     },
     runTask () {
       let hassvg = d3.selectAll('svg')

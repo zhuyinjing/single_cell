@@ -3,6 +3,13 @@
     <h2>tSNE 聚类</h2>
     <p>tSNE可以基于筛选后主成分进一步降维，然后对细胞进行聚类。完成聚类后，可根据实际的生物学问题，深入研究各类细胞之间的异同，及其背后的生物学意义。</p>
 
+
+    {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
     <div id="svgContainer">
       <div class="svgBox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['tSNE样本标记图', 'sampleContainer'])">{{$t('button.svg')}}</el-button>
@@ -139,6 +146,9 @@ export default {
       sampleValue: '',
       timer: '',
       pauseBtnShow: true,
+      radius: 1.5,
+      width: 800,
+      height: 800,
     }
   },
   components: {
@@ -191,10 +201,10 @@ export default {
         this.timer = setInterval(() => {
           circles.transition()
             .duration(2000)
-            .attr('r', 3)
+            .attr('r', this.radius * 3)
             .transition()
             .duration(2000)
-            .attr('r', 1.5)
+            .attr('r', this.radius)
         }, 4000)
       }
     },
@@ -285,7 +295,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#sampleSvg').remove()
       }
-      let width = 800, height = 800
+      let width = this.width, height = this.height
       let padding = {top:30,right:120,bottom:60,left:60}
       let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
       let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
@@ -318,9 +328,10 @@ export default {
          .data(this.$store.state.commonInfo.cellId)
          .enter()
          .append("circle")
+         .attr("class", "sampleCircle")
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
+         .attr("r", this.radius)
          .attr("fill", (d,i) => colorScale(self.data.sampleId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)
@@ -375,7 +386,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#clusterSvg').remove()
       }
-      let width = 800, height = 800
+      let width = this.width, height = this.height
       let padding = {top:30,right:120,bottom:60,left:60}
       let clusterSvg = d3.select("#clusterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
@@ -445,7 +456,7 @@ export default {
          .attr("class", "clusterCircle")
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
+         .attr("r", this.radius)
          .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text(d)
@@ -648,6 +659,16 @@ export default {
        }).catch(() => {});
       })
 
+    },
+    changeRadius () {
+      d3.selectAll(".sampleCircle").attr("r", this.radius)
+      d3.selectAll(".clusterCircle").attr("r", this.radius)
+    },
+    changeWidth () {
+      window.clearInterval(this.timer)
+      this.pauseBtnShow = false
+      this.initScatterSample()
+      this.initScatterCluster()
     },
   }
 }

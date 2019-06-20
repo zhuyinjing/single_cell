@@ -108,6 +108,7 @@ export default {
           if (res.data.experimentDesign) {
             this.experimentDesign = res.data.experimentDesign
           } else {
+            this.$store.state.projectType === 'ScRNA_CCA' ? this.experimentDesign = {'sampleGroups':[]} : this.experimentDesign = {'sampleName':[]}
             this.$message("暂无实验设计，请编辑！")
           }
         } else {

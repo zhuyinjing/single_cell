@@ -36,19 +36,16 @@ export default new Vuex.Store({
     },
     menuShow: true,
     appmenuShow: true,
-    speciesArr: {
-      'Human (Homo sapiens)': 9606,
-      'Mouse (Mus musculus)': 10090,
-      'Soybean (Clycine max)': 3847,
-      'Zebrafish (Danio rerio)': 7955,
-      'Thale cress (Arabidopsis thaliana)': 3702
-    },
+    speciesArr: {},
     svgDescribeShow: false,
     projectType: null,
     commonInfo: null, // tSNE 骨架信息
 
   },
   mutations: {
+    setspeciesArr: (state, data) => {
+      state.speciesArr = data
+    },
     setusername: (state, data) => {
       localStorage.setItem('username', data)
       state.username = data

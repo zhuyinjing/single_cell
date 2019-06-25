@@ -101,7 +101,7 @@ export default {
         id: '',
         name: '',
         description: '',
-        species: 'Human (Homo sapiens)',
+        species: '',
         type: 'ScRNA_PCA'
       },
       speciesList: ['homo_sapiens', 'ictidomys_tridecemlineatus', 'glycine_max'],
@@ -111,6 +111,14 @@ export default {
   },
   components: {
     imgMenuShowComp
+  },
+  created () {
+    this.axios.get('/singel_cell/server/get_species_info?username=' + this.$store.state.username).then(res => {
+      if (res.data.message_type === 'success') {
+        this.form.species = Object.keys(res.data.speciesInfo)[0] // 默认显示第一个
+        this.$store.commit('setspeciesArr', res.data.speciesInfo)
+      }
+    })
   },
   mounted () {
     this.$nextTick(() => {

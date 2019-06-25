@@ -755,18 +755,18 @@ export default {
         .style("text-anchor", "end")
         .attr("transform", "translate(-15,10) rotate(-90)");
 
-        let color  = {}
-        color["A"] = d3.scaleLinear()
-            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
-            .range(["#bebbbb", "red"]);
+      let color  = {}
+      color["A"] = d3.scaleLinear()
+          .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
+          .range(["#bebbbb", "red"]);
 
-        color["B"] = d3.scaleLinear()
-            .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
-            .range(["#bebbbb", "blue"]);
+      color["B"] = d3.scaleLinear()
+          .domain(d3.extent(this.DotPlotData.docList, d => d.meanValue))
+          .range(["#bebbbb", "blue"]);
 
-        var radiusLinear = d3.scaleLinear()
-            .domain([0, 1])
-            .range([6, 10]);
+      var radiusLinear = d3.scaleLinear()
+          .domain([0, 1])
+          .range([6, 10]);
 
           //添加circle包裹层，有几种类型添加几个
           var cover = svg.append("g")
@@ -911,12 +911,12 @@ export default {
                  .attr("r", (d, i) => radiusLinear(d))
 
      legendCircle.selectAll('.text')
-                 .data([0, 0.25, 0.50, 0.75, 1])
+                 .data(['< 0.25', ' 0.25', ' 0.50', ' 0.75', ' 1.00'])
                  .enter()
                  .append("text")
                  .attr("x", (d, i) => 40)
                  .attr("y", (d, i) => i * 20 + 5)
-                 .text((d) => d.toFixed(2))
+                 .text((d) => d)
 
       legendCircle.append("text")
   					.attr("class","valueText")

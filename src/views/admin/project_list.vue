@@ -40,6 +40,7 @@
               <tr>
                 <th>项目名称</th>
                 <th>项目类型</th>
+                <th>物种</th>
                 <th>创建时间</th>
                 <th>操作</th>
               </tr>
@@ -154,6 +155,8 @@ export default {
                 }, {
                     "mDataProp" : "type"
                 }, {
+                    "mDataProp" : "speciesInfoEntity.commonName"
+                },{
                     "mDataProp" : "openTime",
                     "mRender" : function(data, type, full) {
                         let time = data.split('T')[0] + ' ' + data.split('T')[1].split('.')[0]

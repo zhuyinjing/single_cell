@@ -778,7 +778,7 @@ export default {
             .append("circle")
             .attr("cx", d => xScale(d.geneName))
             .attr("cy", d => yScale(d.clusterName + '_' + d.groupName))
-            .attr("r", d => radiusLinear(d['pct' + sampleKey[d.groupName]]))
+            .attr("r", d => d['pct' + sampleKey[d.groupName]] ? radiusLinear(d['pct' + sampleKey[d.groupName]]) : 6)
             .attr("fill", d => color[sampleKey[d.groupName]](d.meanValue))
             .on("mouseover", function(d) {
               let self = this;

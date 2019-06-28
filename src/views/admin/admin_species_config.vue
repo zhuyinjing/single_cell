@@ -13,8 +13,8 @@
             <el-input v-model.number="ruleForm1.transcriptome"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="submitForm1('ruleForm')">提交</el-button>
-            <el-button @click="resetForm('ruleForm')">重置</el-button>
+            <el-button type="primary" @click="submitForm1('ruleForm1')">提交</el-button>
+            <el-button @click="resetForm('ruleForm1')">重置</el-button>
           </el-form-item>
         </el-form>
       </el-tab-pane>
@@ -108,7 +108,7 @@ export default {
       submitForm1(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this.axios.get('/admin/create_refer_info?username=' + this.$store.state.username + '&speciesId=' + this.ruleForm.id + '&genome=' + this.ruleForm.genome + '&transcriptome=' + this.ruleForm.transcriptome).then(res => {
+            this.axios.get('/admin/create_refer_info?username=' + this.$store.state.username + '&speciesId=' + this.ruleForm1.id + '&genome=' + this.ruleForm1.genome + '&transcriptome=' + this.ruleForm1.transcriptome).then(res => {
               this.$message.info(res.data.message)
             })
           } else {

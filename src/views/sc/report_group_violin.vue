@@ -7,6 +7,12 @@
         <div class="violin">
           <h3>特征基因表达值分布</h3>
           <p>如下所示，小提琴图展示了特征基因在不同tSNE聚类中的表达量分布。横坐标标识不同tSNE聚类，纵坐标表示基因的UMI数目，每个点代表一个细胞。</p>
+
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.width')}}：<el-input-number size="mini" v-model="widthViolin" :step="100" :min="0" @change="initViolin()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.height')}}：<el-input-number size="mini" v-model="heightViolin" :step="100" :min="0" @change="initViolin()"></el-input-number> <br><br>
+
           <div v-show="violinSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['violin', 'violinContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -15,20 +21,6 @@
           <div id="violinContainer"></div>
         </div>
 
-      </el-tab-pane>
-      <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
-        <div class="scatter" style="white-space: nowrap;">
-          <h3>特征基因表达值聚类图标记</h3>
-          <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
-          <div v-show="scatterSvgShow">
-            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
-            <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
-            <el-button type="warning" size="small" @click="initScatterCluster()">显示 tSNE 图</el-button>
-          </div>
-
-          <div id="scatterContainer" style="display:inline-block"></div>
-          <div id="tSNEClusterDiv" style="display:inline-block"></div>
-        </div>
       </el-tab-pane>
       <el-tab-pane style="overflow-x:auto" label="Heatmap" name="heatmapSvgShow">
         <div class="heatmap">
@@ -42,13 +34,34 @@
           <div id="heatmapContainer"></div>
         </div>
       </el-tab-pane>
+      <el-tab-pane style="overflow-x:auto" label="FeaturePlot" name="scatterSvgShow">
+        <div class="scatter" style="white-space: nowrap;">
+          <h3>特征基因表达值聚类图标记</h3>
+          <p>如下所示，在tSNE聚类图中，特征基因表达量的高低用不同颜色进行标记，紫色代表高表达量，灰色代表低表达量。</p>
+
+          {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radiusFeature" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.width')}}：<el-input-number size="mini" v-model="widthFeature" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.height')}}：<el-input-number size="mini" v-model="heightFeature" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
+          <div v-show="scatterSvgShow">
+            <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
+            <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
+            <el-button type="warning" size="small" @click="initScatterCluster()">显示 tSNE 图</el-button>
+          </div>
+
+          <div id="scatterContainer" style="display:inline-block"></div>
+          <div id="tSNEClusterDiv" style="display:inline-block"></div>
+        </div>
+      </el-tab-pane>
     </el-tabs>
     <br>
 
     <el-card class="" shadow="hover">
       <el-button type="primary" size="middle" @click="initViolinData()">VlnPlot</el-button>
-      <el-button type="danger" size="middle" @click="initScatterData()">FeaturePlot</el-button>
       <el-button type="danger" size="middle" @click="initHeatmapData()">Heatmap</el-button>
+      <el-button type="danger" size="middle" @click="initScatterData()">FeaturePlot</el-button>
     </el-card>
 
     <br>
@@ -151,6 +164,11 @@ export default {
       filterMethod: false,
       activeTab: 'violinSvgShow',
       clusterRadio: null,
+      widthViolin: 400,
+      heightViolin: 600,
+      radiusFeature: 1.5,
+      widthFeature: 800,
+      heightFeature: 800,
     }
   },
   components: {
@@ -286,17 +304,17 @@ export default {
                 "sProcessing": "loading data..."
                },
               //通过ajax实现分页的url路径
-              "sAjaxSource" : "/singel_cell/server/search_ccm_list"
+              "sAjaxSource" : "/singel_cell/server/search_deg_list"
                               +"?username=" + self.$store.state.username
                               +"&p=" + self.$store.state.projectId
                               +"&clusterName=" + self.clusterRadio
                               +"&geneId=" + (self.filterMethod === false ? self.geneId: '')
-                              +"&pValueAdjStartA=" + (self.filterMethod === false ? '' :self.pValueAdjStartA)
-                              +'&pValueAdjEndA=' + (self.filterMethod === false ? '' :self.pValueAdjEndA)
-                              +"&pct1StartA=" + (self.filterMethod === false ? '' :self.pct1StartA)
-                              +"&pct1EndA=" + (self.filterMethod === false ? '' :self.pct1EndA)
-                              +"&pct2StartA=" + (self.filterMethod === false ? '' :self.pct2StartA)
-                              +"&pct2EndA=" + (self.filterMethod === false ? '' :self.pct2EndA),
+                              +"&pValueAdjStart=" + (self.filterMethod === false ? '' :self.pValueAdjStartA)
+                              +'&pValueAdjEnd=' + (self.filterMethod === false ? '' :self.pValueAdjEndA)
+                              +"&pctAStart=" + (self.filterMethod === false ? '' :self.pct1StartA)
+                              +"&pctAEnd=" + (self.filterMethod === false ? '' :self.pct1EndA)
+                              +"&pctBStart=" + (self.filterMethod === false ? '' :self.pct2StartA)
+                              +"&pctBEnd=" + (self.filterMethod === false ? '' :self.pct2EndA),
               "rowCallback": function( row, data ) {
                 //  在当前页 选中 切换页面回来后 还是选中状态
                 if ( $.inArray(data.geneId, self.selected) !== -1 ) {
@@ -315,27 +333,27 @@ export default {
               }, {
                   "mDataProp" : "geneName"
               }, {
-                  "mDataProp" : "avgLogFCA",
+                  "mDataProp" : "avgLogFC",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               }, {
-                  "mDataProp" : "pValAdjA",
+                  "mDataProp" : "pValAdj",
                   "render": function (data) {
                     return self.num2e(data)
                   }
               }, {
-                  "mDataProp" : "pValueA",
+                  "mDataProp" : "pValue",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               }, {
-                  "mDataProp" : "pct1A",
+                  "mDataProp" : "pctA",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
               }, {
-                  "mDataProp" : "pct2A",
+                  "mDataProp" : "pctB",
                   "render": function (data) {
                     return data.toFixed(3)
                   }
@@ -379,7 +397,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#violinsvg').remove()
       }
-      let width = 110 * this.$store.state.commonInfo.clusterNameList.length, height = 600 // 每个 g 标签的宽度/高度
+      let width = this.widthViolin, height = this.heightViolin // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:60}
       let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
@@ -641,7 +659,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      let width = 800, height = 800 // 每个 g 标签的宽度/高度
+      let width = this.widthFeature, height = this.heightFeature // 每个 g 标签的宽度/高度
       let padding = {top:50,right:80,bottom:40,left:60}
       let number = this.selected.length // 一行显示几个图
       let scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "scattersvg")
@@ -679,9 +697,10 @@ export default {
            .data(xData)
            .enter()
            .append("circle")
+           .attr("class", "clusterCircle")
            .attr("cx", (d,i) => xScale(xData[i]))
            .attr("cy", (d,i) => yScale(yData[i]))
-           .attr("r", 2.5)
+           .attr("r", this.radiusFeature)
            .attr("fill", (d,i) => colorScale(colorValue[i]))
            .on('mouseover', function (d, i) {
                return tooltip.style('visibility', 'visible').text(colorValue[i])
@@ -768,9 +787,9 @@ export default {
       let splitGroup
       let hassvg = d3.selectAll('#clusterSvg')._groups[0].length
       if (hassvg) {
-        return
+        d3.selectAll('#clusterSvg').remove()
       }
-      let width = 800, height = 800
+      let width = this.widthFeature, height = this.heightFeature
       let padding = {top:30,right:120,bottom:60,left:60}
       let clusterSvg = d3.select("#tSNEClusterDiv").append("svg").attr("width", width).attr("height", height).attr("id", "clusterSvg")
       let svg = clusterSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
@@ -800,7 +819,7 @@ export default {
          .attr("class", "clusterCircle")
          .attr("cx", (d,i) => xScale(this.$store.state.commonInfo[xText][i]))
          .attr("cy", (d,i) => yScale(this.$store.state.commonInfo[yText][i]))
-         .attr("r", 1.5)
+         .attr("r", this.radiusFeature)
          .attr("fill", (d,i) => colorScale(this.$store.state.commonInfo.clusterId[i]))
          .on('mouseover', function (d, i) {
            return tooltip.style('visibility', 'visible').text('cluster: ' + self.$store.state.commonInfo.clusterId[i])
@@ -850,6 +869,15 @@ export default {
             })
             .text(d => d)
             .attr("class","groupText")
+    },
+    changeRadius () {
+      d3.selectAll(".clusterCircle").attr("r", this.radiusFeature)
+    },
+    changeWidth () {
+      this.initScatter()
+      if (d3.selectAll('#clusterSvg')._groups[0].length) {
+        this.initScatterCluster()
+      }
     },
   }
 }

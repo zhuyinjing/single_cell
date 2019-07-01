@@ -14,6 +14,10 @@
 
     &nbsp;&nbsp;&nbsp;
     {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="initD3()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="initD3()"></el-input-number>
 
     <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['PCA', 'd3container'])">{{$t('button.svg')}}</el-button>
     <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -36,6 +40,8 @@ export default {
       data: null,
       radius: 3,
       opacity: 1,
+      width: 800,
+      height: 800
     }
   },
   components: {
@@ -82,8 +88,8 @@ export default {
         d3.selectAll('.d3pcasvg').remove()
       }
       let self = this
-      var initWidth = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
-      var initHeight = this.pcArr.length > 8 ? this.pcArr.length * 100 : 800
+      var initWidth = this.width
+      var initHeight = this.height
       // var initWidth = 800 + 40 * this.pcArr.length
       // var initHeight = 800 + 40 * this.pcArr.length
 

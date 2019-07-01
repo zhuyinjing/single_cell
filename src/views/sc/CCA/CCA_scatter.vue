@@ -232,6 +232,7 @@ export default {
           .data(self.data[self.pcArr[0]])
           .enter()
           .append("circle")
+          .attr("class", "circleScatter")
           .attr("cx", function(d, i) {
             return xScale(d)
           })
@@ -318,6 +319,7 @@ export default {
               .data(self.data[self.pcArr[j]])
               .enter()
               .append("circle")
+              .attr("class", "circleScatter")
               .attr("cx", function(d) {
                 return xScale(d)
               })
@@ -367,7 +369,7 @@ export default {
       d3.selectAll('.tick').selectAll("line").style("stroke", "#cccccc4d")
     },
     changeRadius () {
-      d3.selectAll("circle").attr("r", this.radius)
+      d3.selectAll(".circleScatter").attr("r", this.radius)
     },
 
 

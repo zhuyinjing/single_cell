@@ -79,6 +79,11 @@ let router = [
         name: 'report_nGene_nUMI',
         component: resolve => require(['@/views/sc/report_nGene_nUMI'], resolve)
       },
+      {
+        path: 'report_tSNE_transition', // tSNE 动效图
+        name: 'report_tSNE_transition',
+        component: resolve => require(['@/views/sc/report_tSNE_transition'], resolve)
+      },
       // CCA
       {
         path: 'CCA_UMI_count',

@@ -23,6 +23,7 @@
       <el-menu-item-group>
         <span slot="" class="title-style">tSNE聚类</span>
         <router-link to="/sc/report_tSNE"><el-menu-item index="report_tSNE">tSNE 聚类图</el-menu-item></router-link>
+        <router-link to="/sc/report_tSNE_transition"><el-menu-item index="report_tSNE_transition">tSNE 聚类图 (动效)</el-menu-item></router-link>
       </el-menu-item-group>
       <el-menu-item-group>
         <span slot="" class="title-style">类间特征基因表达分析</span>

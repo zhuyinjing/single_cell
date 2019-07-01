@@ -52,7 +52,7 @@ export default {
           width = 1000 - margin.left - margin.right,
           height = 600 - margin.top - margin.bottom;
 
-      let xData = ["exon", "intron", "Ambiguity", "Intergenic", "Unmapped", "NA"]
+      let xData = ["exon", "intron", "ambiguity", "intergenic", "unmapped", "na"]
 
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
 
@@ -69,7 +69,7 @@ export default {
 
         // Compute quartiles, median, inter quantile range min and max --> these info are then used to draw the box.
         var sumstat = d3.nest() // nest function allows to group the calculation per level of a factor
-          .key(function(d) { return d.assignmentType;})
+          .key(function(d) { return (d.assignmentType).toLowerCase();})
           .rollup(function(d) {
             q1 = d3.quantile(d.map(function(g) { return g.fractionReads;}).sort(d3.ascending),.25)
             median = d3.quantile(d.map(function(g) { return g.fractionReads;}).sort(d3.ascending),.5)
@@ -147,7 +147,7 @@ export default {
       // 异常值的取值范围 > top, < bottom
       let circleData = []
       sumstat.map(item => {
-        circleData = circleData.concat(this.boxData.filter(d => d.assignmentType === item.key).filter(d => d.fractionReads < item.value.min || d.fractionReads > item.value.max))
+        circleData = circleData.concat(this.boxData.filter(d => (d.assignmentType).toLowerCase() === item.key).filter(d => d.fractionReads < item.value.min || d.fractionReads > item.value.max))
       })
       var jitterWidth = 50
       svg
@@ -155,7 +155,7 @@ export default {
         .data(circleData)
         .enter()
         .append("circle")
-          .attr("cx", function(d){return(x(d.assignmentType))})
+          .attr("cx", function(d){return(x((d.assignmentType).toLowerCase()))})
           .attr("cy", function(d){return(y(d.fractionReads))})
           .attr("r", 2.5)
           .on('mouseover', function (d, i) {

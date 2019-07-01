@@ -18,6 +18,10 @@
       </div>
 
       <div class="svgBox">
+        <div id="divLegend"></div>
+      </div>
+
+      <div class="svgBox">
         <!-- <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="mergeDialogShow = true">合并组</el-button>
         <el-button type="primary" size="small" icon="el-icon-edit-outline" @click="splitDialogShow = true">拆分组</el-button> -->
         <el-button type="warning" size="small" icon="el-icon-edit" @click="changeNameDialogShow = true">更改组名</el-button>
@@ -290,12 +294,58 @@ export default {
       let hassvg = d3.selectAll('#sampleSvg')
       if (hassvg) {
         d3.selectAll('#sampleSvg').remove()
+        d3.selectAll('#legendSvg').remove()
       }
       let width = this.width, height = this.height
-      let padding = {top:30,right:150,bottom:60,left:60}
+      let padding = {top:30,right:10,bottom:60,left:60} // right: 150
       let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
       let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")
-      let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+      let colorScale
+      if (this.data.groupName.length < 20) {
+        colorScale = d3.scaleOrdinal(d3.schemeCategory20)
+      } else {
+        var randomColorList = [
+                                  0xd3fe14, 0xfec7f8, 0x0b7b3e, 0x0bf0e9, 0xc203c8, 0xfd9b39, 0x888593,
+                                  0x906407, 0x98ba7f, 0xfe6794, 0x10b0ff, 0xac7bff, 0xfee7c0, 0x964c63,
+                                  0x1da49c, 0x0ad811, 0xbbd9fd, 0xfe6cfe, 0x297192, 0xd1a09c, 0x78579e,
+                                  0x81ffad, 0x739400, 0xca6949, 0xd9bf01, 0x646a58, 0xd5097e, 0xbb73a9,
+                                  0xccf6e9, 0x9cb4b6, 0xb6a7d4, 0x9e8c62, 0x6e83c8, 0x01af64, 0xa71afd,
+                                  0xcfe589, 0xd4ccd1, 0xfd4109, 0xbf8f0e, 0x2f786e, 0x4ed1a5, 0xd8bb7d,
+                                  0xa54509, 0x6a9276, 0xa4777a, 0xfc12c9, 0x606f15, 0x3cc4d9, 0xf31c4e,
+                                  0x73616f, 0xf097c6, 0xfc8772, 0x92a6fe, 0x875b44, 0x699ab3, 0x94bc19,
+                                  0x7d5bf0, 0xd24dfe, 0xc85b74, 0x68ff57, 0xb62347, 0x994b91, 0x646b8c,
+                                  0x977ab4, 0xd694fd, 0xc4d5b5, 0xfdc4bd, 0x1cae05, 0x7bd972, 0xe9700a,
+                                  0xd08f5d, 0x8bb9e1, 0xfde945, 0xa29d98, 0x1682fb, 0x9ad9e0, 0xd6cafe,
+                                  0x8d8328, 0xb091a7, 0x647579, 0x1f8d11, 0xe7eafd, 0xb9660b, 0xa4a644,
+                                  0xfec24c, 0xb1168c, 0x188cc1, 0x7ab297, 0x4468ae, 0xc949a6, 0xd48295,
+                                  0xeb6dc2, 0xd5b0cb, 0xff9ffb, 0xfdb082, 0xaf4d44, 0xa759c4, 0xa9e03a,
+                                  0x0d906b, 0x9ee3bd, 0x5b8846, 0x0d8995, 0xf25c58, 0x70ae4f, 0x847f74,
+                                  0x9094bb, 0xffe2f1, 0xa67149, 0x936c8e, 0xd04907, 0xc3b8a6, 0xcef8c4,
+                                  0x7a9293, 0xfda2ab, 0x2ef6c5, 0x807242, 0xcb94cc, 0xb6bdd0, 0xb5c75d,
+                                  0xfde189, 0xb7ff80, 0xfa2d8e, 0x839a5f, 0x28c2b5, 0xe5e9e1, 0xbc79d8,
+                                  0x7ed8fe, 0x9f20c3, 0x4f7a5b, 0xf511fd, 0x09c959, 0xbcd0ce, 0x8685fd,
+                                  0x98fcff, 0xafbff9, 0x6d69b4, 0x5f99fd, 0xaaa87e, 0xb59dfb, 0x5d809d,
+                                  0xd9a742, 0xac5c86, 0x9468d5, 0xa4a2b2, 0xb1376e, 0xd43f3d, 0x05a9d1,
+                                  0xc38375, 0x24b58e, 0x6eabaf, 0x66bf7f, 0x92cbbb, 0xddb1ee, 0x1be895,
+                                  0xc7ecf9, 0xa6baa6, 0x8045cd, 0x5f70f1, 0xa9d796, 0xce62cb, 0x0e954d,
+                                  0xa97d2f, 0xfcb8d3, 0x9bfee3, 0x4e8d84, 0xfc6d3f, 0x7b9fd4, 0x8c6165,
+                                  0x72805e, 0xd53762, 0xf00a1b, 0xde5c97, 0x8ea28b, 0xfccd95, 0xba9c57,
+                                  0xb79a82, 0x7c5a82, 0x7d7ca4, 0x958ad6, 0xcd8126, 0xbdb0b7, 0x10e0f8,
+                                  0xdccc69, 0xd6de0f, 0x616d3d, 0x985a25, 0x30c7fd, 0x0aeb65, 0xe3cdb4,
+                                  0xbd1bee, 0xad665d, 0xd77070, 0x8ea5b8, 0x5b5ad0, 0x76655e, 0x598100,
+                                  0x86757e, 0x5ea068, 0xa590b8, 0xc1a707, 0x85c0cd, 0xe2cde9, 0xdcd79c,
+                                  0xd8a882, 0xb256f9, 0xb13323, 0x519b3b, 0xdd80de, 0xf1884b, 0x74b2fe,
+                                  0xa0acd2, 0xd199b0, 0xf68392, 0x8ccaa0, 0x64d6cb, 0xe0f86a, 0x42707a
+                                  ].map(d3_rgbString)
+        colorScale = d3.scaleOrdinal()
+          .domain(this.data.groupName)
+          .range(randomColorList);
+      }
+
+      function d3_rgbString (value) {
+        return d3.rgb(value >> 16, value >> 8 & 0xff, value & 0xff);
+      }
+
       let [xText, yText] = [...this.$store.state.commonInfo.tsneNumList.tsneNum]
       let tooltip = d3.select('#container')
         .append('div')
@@ -352,10 +402,13 @@ export default {
 
       let groupArr = this.data.groupName
       this.groupArr = groupArr
+      // groupArr = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
 
-      //  分组颜色图例
+      // 图例 Div
+
       let legendR = 8
-      let legend = sampleSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
+      d3.select('#divLegend').style("height", (this.height - 120) + "px")
+      let legend = d3.select('#divLegend').append("svg").attr("width", 180).attr("height", groupArr.length * 30).attr("id","legendSvg").append("g").attr("transform","translate(10,10)")
       legend.selectAll(".circle")
             .data(groupArr)
             .enter()
@@ -373,6 +426,28 @@ export default {
               return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
             })
             .text(d => d)
+
+
+      //  分组颜色图例
+      // let legendR = 8
+      // let legend = sampleSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")")
+      // legend.selectAll(".circle")
+      //       .data(groupArr)
+      //       .enter()
+      //       .append("circle")
+      //       .attr("cx",0)
+      //       .attr("cy",(d,i) => i * 30)
+      //       .attr("r",legendR)
+      //       .attr("fill", d => colorScale(d))
+      //
+      // legend.selectAll(".text")
+      //       .data(groupArr)
+      //       .enter()
+      //       .append("text")
+      //       .attr("transform",(d,i) => {
+      //         return "translate(" + (legendR * 2) +","+ (legendR/2 + i * 30) +")"
+      //       })
+      //       .text(d => d)
 
     },
     initScatterCluster () {
@@ -420,7 +495,7 @@ export default {
 
       //  分组颜色图例
       let legendR = 8
-      let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+(height/4)+")").attr("class", "lengendCluster")
+      let legend = clusterSvg.append("g").attr("transform","translate("+(width-padding.right + 30)+","+45+")").attr("class", "lengendCluster")
       legend.selectAll(".circle")
             .data(groupArr)
             .enter()
@@ -682,11 +757,31 @@ export default {
 }
 .svgBox {
   display: inline-block;
+  vertical-align: top;
 }
 .el-checkbox+.el-checkbox {
   margin-left: 0 !important;
 }
+#divLegend {
+  margin-top: 70px;
+  overflow-y: auto;
+}
 
+#divLegend::-webkit-scrollbar {
+ width: 8px;
+}
+#divLegend::-webkit-scrollbar-track {
+ background-color: #fafafa;
+ -webkit-border-radius: 2em;
+ -moz-border-radius: 2em;
+ border-radius:2em;
+}
+ #divLegend::-webkit-scrollbar-thumb {
+ background-color: #c7c8c7;
+ -webkit-border-radius: 2em;
+ -moz-border-radius: 2em;
+ border-radius:2em;
+}
 </style>
 <style media="screen">
 .brushing {

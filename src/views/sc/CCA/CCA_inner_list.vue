@@ -6,6 +6,11 @@
         <div class="violin">
           <h3>特征基因表达值分布</h3>
           <p>如下所示，小提琴图展示了特征基因在不同tSNE聚类中的表达量分布。横坐标标识不同tSNE聚类，纵坐标表示基因的UMI数目，每个点代表一个细胞。</p>
+
+          {{$t('d3.width')}}：<el-input-number size="mini" v-model="widthViolin" :step="100" :min="0" @change="initViolin()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          {{$t('d3.height')}}：<el-input-number size="mini" v-model="heightViolin" :step="100" :min="0" @change="initViolin()"></el-input-number> <br><br>
+
           <div v-show="violinSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['violin', 'violinContainer'])">{{$t('button.svg')}}</el-button>
             <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
@@ -155,12 +160,16 @@ export default {
       heatmapSvgShow: false,
       heatmapData: [],
       width: 600,
-      radius: 1.5
+      radius: 1.5,
+      widthViolin: null,
+      heightViolin: 600,
     }
   },
   components: {
   },
   mounted() {
+    this.widthViolin = this.$store.state.commonInfo.clusterNameList.length > 3 ? 110 * this.$store.state.commonInfo.clusterNameList.length : 600
+
     if (!this.$store.state.commonInfo) { // 刷新页面 vuex 数据被清空
       this.getDBdata()
     } else {
@@ -384,10 +393,9 @@ export default {
       if (hassvg) {
         d3.selectAll('#violinsvg').remove()
       }
-      let width = 110 * this.$store.state.commonInfo.clusterNameList.length, height = 600 // 每个 g 标签的宽度/高度
+      let width = this.widthViolin, height = this.heightViolin // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:60}
-      // let number = this.selected.length < 2 ? 1 : 2 // 一行显示几个图，默认为 2
-      let number = 1
+      let number = this.$store.state.commonInfo.clusterNameList.length > 3 ? 1 : 2 // 一行显示几个图，默认为 2
       let violinsvg = d3.select("#violinContainer").append("svg").attr("width", width * number).attr("height", (height * Math.ceil(this.selected.length / number))).attr("id", "violinsvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
 

@@ -42,7 +42,17 @@
           &nbsp;&nbsp;&nbsp;
           {{$t('d3.width')}}：<el-input-number size="mini" v-model="widthFeature" :step="100" :min="0" @change="changeWidth()"></el-input-number>
           &nbsp;&nbsp;&nbsp;
-          {{$t('d3.height')}}：<el-input-number size="mini" v-model="heightFeature" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+          {{$t('d3.height')}}：<el-input-number size="mini" v-model="heightFeature" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+          &nbsp;&nbsp;&nbsp;
+          是否使用相同的基因表达量最大值最小值：
+          <el-switch
+            v-model="colorSwitch"
+            active-text=""
+            inactive-text=""
+            @change="colorSwitchChange"
+          >
+          </el-switch>
+          <br><br>
 
           <div v-show="scatterSvgShow">
             <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['scatter', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
@@ -168,6 +178,7 @@ export default {
       heightFeature: 800,
       widthViolin: null,
       heightViolin: 600,
+      colorSwitch: false
     }
   },
   components: {
@@ -679,10 +690,15 @@ export default {
       for (let i = 0;i < this.selected.length;i++) {
         let svg = scattersvg.append("g").attr("transform", "translate("+ ((i % number) * width) + "," + (parseInt(i / number) * height) +")")
         let [xData, yData] = [this.$store.state.commonInfo[tsneNum[0]], this.$store.state.commonInfo[tsneNum[1]]]
-        let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的值，为了区别颜色的深浅
-        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorValue)[0] - (d3.extent(colorValue)[1] - d3.extent(colorValue)[0]) / 5,d3.extent(colorValue)[1]])
-        // let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain(d3.extent(colorValue))
-
+        let colorValue = this.scatterData[this.selected[i]] // 每个 circle 的颜色深浅值
+        let colorDomainArr = []
+        if (this.colorSwitch === false) {
+          colorDomainArr = colorValue
+        } else {
+          this.selected.map(item => colorDomainArr = colorDomainArr.concat([...this.scatterData[item]]))
+        }
+        let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain([d3.extent(colorDomainArr)[0] - (d3.extent(colorDomainArr)[1] - d3.extent(colorDomainArr)[0]) / 5,d3.extent(colorDomainArr)[1]])
+        // let colorScale = d3.scaleSequential(d3Chromatic.interpolateReds).domain(d3.extent(colorDomainArr))
         let xScale = d3.scaleLinear().domain(d3.extent(xData)).range([padding.left,width - padding.right]).nice()
         svg.append("g")
           .attr("transform", "translate(0," + (height - padding.bottom) + ")")
@@ -768,7 +784,8 @@ export default {
        					.attr("y", padding.top + 40)
        					.attr("dy", "-0.3em")
                 .attr("text-anchor", "middle")
-       					.text(() => d3.min(colorValue).toFixed(2));
+                // .text(() => d3.min(colorDomainArr).toFixed(2));
+       					.text(() => (d3.extent(colorDomainArr)[0] - (d3.extent(colorDomainArr)[1] - d3.extent(colorDomainArr)[0]) / 5).toFixed(2));
 
        		var maxValueText = svg.append("text")
        					.attr("class","valueText")
@@ -776,7 +793,7 @@ export default {
        					.attr("y", padding.top + 40)
        					.attr("dy", "-0.3em")
                 .attr("text-anchor", "middle")
-       					.text(() => d3.max(colorValue).toFixed(2));
+       					.text(() => d3.max(colorDomainArr).toFixed(2));
 
 
 
@@ -878,6 +895,11 @@ export default {
       this.initScatter()
       if (d3.selectAll('#clusterSvg')._groups[0].length) {
         this.initScatterCluster()
+      }
+    },
+    colorSwitchChange (value) {
+      if (this.selected.length > 1) {
+        this.initScatter()
       }
     },
   }

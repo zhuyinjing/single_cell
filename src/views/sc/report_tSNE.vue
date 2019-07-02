@@ -296,7 +296,7 @@ export default {
         d3.selectAll('#sampleSvg').remove()
         d3.selectAll('#legendSvg').remove()
       }
-      let width = this.width, height = this.height
+      let width = this.width - 140, height = this.height
       let padding = {top:30,right:10,bottom:60,left:60} // right: 150
       let sampleSvg = d3.select("#sampleContainer").append("svg").attr("width", width).attr("height", height).attr("id", "sampleSvg")
       let svg = sampleSvg.append("g").attr("transform", "translate("+ padding.left + "," + padding.top +")")

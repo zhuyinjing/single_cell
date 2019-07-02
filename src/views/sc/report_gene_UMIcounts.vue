@@ -98,7 +98,7 @@ export default {
 
         // 每个图 按分组去画 violin plot
         for (let j = 0;j < xData.length;j++) {
-          var data = this.data.geneCount.filter(item => item.featureType === xData[j])
+          var data = this.data.geneCount.filter(item => (item.featureType).toLowerCase() === xData[j])
 
           var yData = data.map(item => item.count)
 
@@ -110,7 +110,7 @@ export default {
           var input, bins,allBins,lengths,longuest
           // Compute the binning for each group of the dataset
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d.featureType;})
+              .key(function(d) { return (d.featureType).toLowerCase();})
               .rollup(function(d) {   // For each key..
                 input = d.map(function(d) { return d.count;})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.
@@ -229,7 +229,7 @@ export default {
 
         // 每个图 按分组去画 violin plot
         for (let j = 0;j < xData.length;j++) {
-          var data = this.data.umiCount.filter(item => item.featureType === xData[j])
+          var data = this.data.umiCount.filter(item => (item.featureType).toLowerCase() === xData[j])
 
           var yData = data.map(item => item.count)
 
@@ -241,7 +241,7 @@ export default {
           var input, bins,allBins,lengths,longuest
           // Compute the binning for each group of the dataset
           var sumstat = d3.nest()  // nest function allows to group the calculation per level of a factor
-              .key(function(d) { return d.featureType;})
+              .key(function(d) { return (d.featureType).toLowerCase();})
               .rollup(function(d) {   // For each key..
                 input = d.map(function(d) { return d.count;})    // Keep the variable called Sepal_Length
                 bins = histogram(input)   // And compute the binning on it.

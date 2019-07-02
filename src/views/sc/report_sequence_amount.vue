@@ -108,7 +108,8 @@ export default {
             .call(d3.axisBottom(x))
             .selectAll("text")
             .style("text-anchor", "end")
-            .attr("transform", "translate(-10,10) rotate(-90)");
+            .attr("transform", "translate(-10,10) rotate(-90)")
+            .style('font-family', 'monospace')
 
         // add the y Axis
         svg.append("g")

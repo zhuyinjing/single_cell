@@ -5,6 +5,12 @@
     <p>UMI是Unique Molecular Identifier的缩写，即唯一分子识别码，用来对单细胞转录本进行绝对定量。在对单细胞RNA分子进行扩增之前，每个转录本都会被加上UMI。对于回贴到同一基因的reads，只需要计算UMI的数量，就可以对该基因转录本进行绝对定量，从而排除扩增对定量的影响。对于一个成功的单细胞转录组测序而言，不同细胞的UMI总和应该分布在一定的范围之内。因此，对不同细胞检测到的UMI数据分布进行描绘，可以辅助判断测序质量。</p>
     <p>下图分别表示，在相同样本中，所有细胞检测到的基因和UMI数目分布。</p>
 
+    {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
     <div class="svgContainer">
       <div class="svgbox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['nGene', 'nGeneContainer'])">{{$t('button.svg')}}</el-button>
@@ -32,6 +38,9 @@ export default {
   data() {
     return {
       data: [],
+      radius: 1.5,
+      width: 500,
+      height: 500
     }
   },
   components: {
@@ -68,8 +77,8 @@ export default {
         .style('background', '#fff')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},
-          width = 400 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
+          width = this.width - margin.left - margin.right,
+          height = this.height - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
       var svg = d3.select("#nGeneContainer")
@@ -161,7 +170,7 @@ export default {
             .append("circle")
             .attr("cx", d => xLinear(d))
             .attr("cy", (d, i) => y(sampleData[i]))
-            .attr("r", 1.5)
+            .attr("r", this.radius)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
               return tooltip.style('visibility', 'visible').text(self.data[i]['cellId'])
@@ -197,8 +206,8 @@ export default {
         .style('background', '#fff')
       	.text('')
       var margin = {top: 15, right: 30, bottom: 30, left: 40},
-          width = 400 - margin.left - margin.right,
-          height = 500 - margin.top - margin.bottom;
+          width = this.width - margin.left - margin.right,
+          height = this.height - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
       var svg = d3.select("#nUMIContainer")
@@ -290,7 +299,7 @@ export default {
             .append("circle")
             .attr("cx", d => xLinear(d))
             .attr("cy", (d, i) => y(sampleData[i]))
-            .attr("r", 1.5)
+            .attr("r", this.radius)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
               return tooltip.style('visibility', 'visible').text(self.data[i]['cellId'])
@@ -308,6 +317,13 @@ export default {
               .attr("text-anchor", "middle")
               .attr("font-size", "16px")
 
+    },
+    changeRadius () {
+      d3.selectAll("circle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initnUMI()
+      this.initnGene()
     },
   }
 }

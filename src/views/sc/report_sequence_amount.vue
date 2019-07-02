@@ -3,6 +3,19 @@
     <h2>不同单细胞测序量</h2>
     <p>RNA-seq测序数据产出可以作为衡量单细胞建库质量的一个指标：如果测序数据量太少，说明该细胞RNA分子库浓度不足；如果测序数据量太大，说明该细胞RNA分子库可能具有较高的重复率。所以，在进行单细胞转录组分析之前，要检测各细胞的测序量，根据实际情况去掉测序量偏性较大的细胞。</p>
     <p>如下图所示，横坐标通过barcode表示不同的细胞，纵坐标表示不同细胞的测序量。</p>
+
+    <label for="">{{$t('sample')}}</label>
+    <el-select v-model="samples" multiple placeholder="请选择" style="width:400px;">
+      <el-option
+        v-for="(item,key) in samplesArr"
+        :key="item"
+        :label="item"
+        :value="item">
+      </el-option>
+    </el-select>
+    &nbsp;&nbsp;
+    <el-button size="small" type="primary" @click="initBarChart()">{{$t('button.submit')}}</el-button> <br><br>
+
     <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['bar_chart', 'barContainer'])">{{$t('button.svg')}}</el-button>
     <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
@@ -16,14 +29,29 @@ export default {
   data() {
     return {
       barData: null,
+      samplesArr: [],
+      samples: []
     }
   },
   components: {
   },
   mounted() {
-    this.getData()
+    this.getExperiment()  // 获取 sample list
   },
   methods: {
+    getExperiment () {
+      this.axios.get('/server/experiment?username=' + this.$store.state.username + '&p=' + this.$store.state.projectId).then((res) => {
+        if (res.data.message_type === 'success') {
+          if (res.data.experimentDesign) {
+            this.samplesArr = res.data.experimentDesign.sampleName
+            this.samples = res.data.experimentDesign.sampleName
+            this.getData()
+          }
+        } else {
+          this.$message.error(res.data.message)
+        }
+      })
+    },
     getData () {
       this.axios.get('/singel_cell/server/get_cell_sequence_num?username='+ this.$store.state.username +'&p='+ this.$store.state.projectId).then((res) => {
         if (res.data.message_type === 'success') {
@@ -45,6 +73,7 @@ export default {
         .style("border-width", "2px")
         .style("border-radius", "5px")
         .style("padding", "5px")
+        .style('position', 'absolute')
 
       let hassvg = d3.selectAll('#barSvg')
       if (hassvg) {
@@ -53,25 +82,26 @@ export default {
       //  获取 svg 容器的实际 width
       // let containerWidth = document.getElementById("barContainer").clientWidth
 
-      var margin = {top: 20, right: 20, bottom: 100, left: 60},
+      var margin = {top: 30, right: 20, bottom: 100, left: 60},
           width = 1200 - margin.left - margin.right,
           height = 600 - margin.top - margin.bottom;
 
       let xData = this.barData.map(item => item.cellId)
-      let yData = this.barData.map(item => item.logScaleValue)
 
       var x = d3.scaleBand().domain(xData).range([0, width]).padding(0.1)
-      var y = d3.scaleLinear().domain(d3.extent(yData)).range([height, 0]).nice()
 
-      var svg = d3.select("#barContainer").append("svg")
+      var svgContainer = d3.select("#barContainer").append("svg")
           .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
+          .attr("height", (height + margin.top + margin.bottom) * this.samples.length)
           .attr("id","barSvg")
-        .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      for (let i = 0;i < this.samples.length;i++) {
+        let svg = svgContainer.append("g").attr("transform", "translate(" + margin.left + "," + ((height + margin.bottom) * i + margin.top) + ")");
+        let yData = this.barData.filter(item => item.sampleId === this.samples[i])
+        var y = d3.scaleLinear().domain(d3.extent(yData, item => item.logScaleValue)).range([height, 0]).nice()
 
         svg.selectAll(".bar")
-            .data(this.barData)
+            .data(yData)
           .enter().append("rect")
             .attr("class", "bar")
             .attr("x", function(d) { return x(d.cellId); })
@@ -113,14 +143,19 @@ export default {
 
         // add the y Axis
         svg.append("g")
-            .call(d3.axisLeft(y));
+            .call(d3.axisLeft(y))
+            .append('text')
+            .text(this.samples[i])
+            .style("font-size", "16px")
+            .attr('fill', '#000')
+            .attr('transform', 'translate(' + 0 + ', -10)')
 
         // y 轴文字
         svg.append("text")
           .text('log10(Number of reads)')
           .style("font-size", "16px")
           .attr("transform", "translate("+ -40 +", " + (height / 2 + 30) + ") rotate(-90)")
-
+      }
 
     },
   }

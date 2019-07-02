@@ -4,6 +4,12 @@
     <p>下图分别对基因数量和UMI数量在基因结构上的分布进行了描绘：对于基因而言，exons表示外显子上存在表达证据的基因数量，intron.exon表示外显子与内含子上同时存在表达证据的基因数量，introns表示内含子上存在表达证据的基因数量；对于UMI而言，exons表示所在read匹配到外显子上的UMI数量，intron.exon表示所在read同时匹配到外显子与内含子上的UMI数量，introns表示所在read匹配到内含子上的UMI数量。</p>
     <p>正常情况下，大部分的基因与UMI数量应该分布在exons与intron.exon两个类别中。</p>
 
+    {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
     <div class="svgContainer">
       <div class="svgbox">
         <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['geneCounts', 'geneContainer'])">{{$t('button.svg')}}</el-button>
@@ -30,6 +36,9 @@ export default {
   data() {
     return {
       data: [],
+      radius: 1.5,
+      width: 500,
+      height: 500
     }
   },
   components: {
@@ -55,7 +64,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#geneCountsSvg').remove()
       }
-      let width = 600, height = 500 // 每个 g 标签的宽度/高度
+      let width = this.width, height = this.height // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:80}
       let violinsvg = d3.select("#geneContainer").append("svg").attr("width", width).attr("height", height).attr("id", "geneCountsSvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
@@ -160,7 +169,7 @@ export default {
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
             .attr("cy", (d, i) => y(d['count']))
-            .attr("r", 1.5)
+            .attr("r", this.radius)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
               return tooltip.style('visibility', 'visible').text(d['cellId'])
@@ -186,7 +195,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#UMIcountsSvg').remove()
       }
-      let width = 600, height = 500 // 每个 g 标签的宽度/高度
+      let width = this.width, height = this.height // 每个 g 标签的宽度/高度
       let padding = {top:30,right:80,bottom:60,left:80}
       let violinsvg = d3.select("#umiContainer").append("svg").attr("width", width).attr("height", height).attr("id", "UMIcountsSvg")
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
@@ -291,7 +300,7 @@ export default {
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
             .attr("cy", (d, i) => y(d['count']))
-            .attr("r", 1.5)
+            .attr("r", this.radius)
             .attr("fill", "black")
             .on('mouseover', function (d, i) {
               return tooltip.style('visibility', 'visible').text(d['cellId'])
@@ -309,6 +318,13 @@ export default {
           .text('Number of UMIs')
           .style("font-size", "16px")
           .attr("transform", "translate("+ 15 +", " + (height / 2) + ") rotate(-90)")
+    },
+    changeRadius () {
+      d3.selectAll("circle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initGene()
+      this.initUMI()
     },
 
   }

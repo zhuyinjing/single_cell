@@ -4,6 +4,13 @@
       <h2>表达基因与UMI数目的对应分布</h2>
       <p>如果一个细胞中发生表达的基因数目较多，那么该细胞的UMI数目也会较大。因此，一般情况下，细胞内发生表达的基因数目与UMI数目呈正相关关系；如果呈负相关关系，提示单细胞转录组测序结果存在问题。另外，基于单细胞表达基因数目与UMI数目的对应分布，也便于对门（Gate）进行设定，过滤掉表达基因数目或UMI数目出现极端值的细胞。</p>
       <p>下图展示了所有细胞表达基因数目与UMI数目的对应分布。</p>
+
+      {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+      &nbsp;&nbsp;&nbsp;
+      {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+      &nbsp;&nbsp;&nbsp;
+      {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br>
+
       <el-button type="primary" size="small" icon="el-icon-picture" @click="$store.commit('d3saveSVG', ['nGene&nUMI', 'scatterContainer'])">{{$t('button.svg')}}</el-button>
       <i class="el-icon-question cursor-pointer" style="font-size:16px" @click="$store.state.svgDescribeShow = true"></i>
 
@@ -21,6 +28,9 @@ export default {
   data() {
     return {
       data: [],
+      radius: 2.5,
+      width: 800,
+      height: 500
     }
   },
   components: {
@@ -45,7 +55,7 @@ export default {
       if (hassvg) {
         d3.selectAll('#scattersvg').remove()
       }
-      var width = 800, height = 500;
+      var width = this.width, height = this.height;
       var scattersvg = d3.select("#scatterContainer").append("svg").attr("width", width).attr("height", height).attr("id", "scattersvg")
       var data = this.data
       var padding = {top: 20, right: 30, bottom: 50, left: 55}
@@ -123,7 +133,7 @@ export default {
                       .append("circle")
                       .attr("cx", (d) => padding.left + xScale(d["nUMI"]))
                       .attr("cy", (d) => padding.top + yScale(d["nGene"]))
-                      .attr("r", 2.5)
+                      .attr("r", this.radius)
                       .on('mouseover', function (d, i) {
                          tooltipCircle.style('visibility', 'visible').text(d['cellId'] +' ('+ d['nUMI'] + ', ' + d['nGene'] + ')').attr("transform", "translate("+ (padding.left + xScale(d[0]) + 10) +", " + (padding.top + yScale(d[1]) - 5) + ")")
                        })
@@ -192,6 +202,12 @@ export default {
       //  x y 坐标轴导致线条加粗
       scattersvg.selectAll(".domain")
           .style("display", "none");
+    },
+    changeRadius () {
+      d3.selectAll("circle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initScatterPlot()
     },
   }
 }

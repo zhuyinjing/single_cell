@@ -146,6 +146,7 @@ export default {
             .call(d3.axisLeft(y))
             .append('text')
             .text(this.samples[i])
+            .style("text-anchor", "start")
             .style("font-size", "16px")
             .attr('fill', '#000')
             .attr('transform', 'translate(' + 0 + ', -10)')

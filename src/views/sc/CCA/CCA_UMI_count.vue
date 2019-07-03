@@ -5,6 +5,12 @@
     <p>唯一分子识别码（Unique Molecular Identifier，UMI），可以用来对单细胞基因表达进行绝对定量。在对单细胞RNA分子进行PCR扩增之前，每个转录本都会被加上UMI。对于回贴到同一基因的所有读段，只需要计算UMI的数量，就可以对单细胞基因表达进行绝对定量，从而排除PCR扩增对定量的影响。对于一个成功的单细胞转录组建库测序而言，不同细胞的UMI数量总和应该具有比较宽泛的分布，不会只集中于某个区间，否则可能预示建库测序过程存在偏性。因此，对不同细胞检测到的UMI数量总和的分布进行描绘，可以辅助判断建库测序质量。</p>
     <p>下两图分别展示了在 <span v-for="item in sample">{{item.groupName}}&nbsp;</span>{{sample.length}}个样本组中，所有细胞被检测到发生表达的基因数量以及UMI数量总和的分布。</p>
 
+    <!-- {{$t('d3.radius')}}：<el-input-number size="mini" v-model="radius" :step="0.5" :min="0" @change="changeRadius()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.width')}}：<el-input-number size="mini" v-model="width" :step="100" :min="0" @change="changeWidth()"></el-input-number>
+    &nbsp;&nbsp;&nbsp;
+    {{$t('d3.height')}}：<el-input-number size="mini" v-model="height" :step="100" :min="0" @change="changeWidth()"></el-input-number> <br><br> -->
+
     <div style="white-space: nowrap;">
       <div id="genePre" style="display:inline-block">
         <el-select v-model="genePreValue" @change="(() => {selectChange('genePreCarousel', 'genePreValue')})">
@@ -15,7 +21,7 @@
             :value="index">
           </el-option>
         </el-select>
-        <el-carousel ref="genePreCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'genePre', 'nGene')})">
+        <el-carousel ref="genePreCarousel" :style="{width: this.width + 'px'}" :height="this.height + 120 + 'px'" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'genePre', 'nGene')})">
           <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
             <div :id="item.groupName + 'genePre'"></div>
           </el-carousel-item>
@@ -30,7 +36,7 @@
             :value="index">
           </el-option>
         </el-select>
-        <el-carousel :initial-index="1"	ref="geneNextCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'geneNext', 'nGene')})">
+        <el-carousel :initial-index="1"	ref="geneNextCarousel" :style="{width: this.width + 'px'}" :height="this.height + 120 + 'px'" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'geneNext', 'nGene')})">
           <el-carousel-item v-for="(item, index) in sample" :key="index + 'genePre'">
             <div :id="item.groupName + 'geneNext'"></div>
           </el-carousel-item>
@@ -48,7 +54,7 @@
             :value="index">
           </el-option>
         </el-select>
-        <el-carousel ref="umiPreCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiPre', 'nUMI')})">
+        <el-carousel ref="umiPreCarousel" :style="{width: this.width + 'px'}" :height="this.height + 120 + 'px'" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiPre', 'nUMI')})">
           <el-carousel-item v-for="(item, index) in sample" :key="index + 'umiPre'">
             <div :id="item.groupName + 'umiPre'"></div>
           </el-carousel-item>
@@ -63,7 +69,7 @@
             :value="index">
           </el-option>
         </el-select>
-        <el-carousel :initial-index="1"	ref="umiNextCarousel" style="width:600px" height="620px" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiNext', 'nUMI')})">
+        <el-carousel :initial-index="1"	ref="umiNextCarousel" :style="{width: this.width + 'px'}" :height="this.height + 120 + 'px'" arrow="always" indicator-position="outside" trigger="click" :autoplay="false" @change="((current, pre) => {change(current, pre, 'umiNext', 'nUMI')})">
           <el-carousel-item v-for="(item, index) in sample" :key="index + 'umiNext'">
             <div :id="item.groupName + 'umiNext'"></div>
           </el-carousel-item>
@@ -101,7 +107,14 @@ export default {
       umiNextValue: '',
       sample: [],
       data: [],
-      loading: false
+      loading: false,
+      radius: 1.5,
+      width: 600,
+      height: 500,
+      genePreIndexArr: [],
+      geneNextIndexArr: [],
+      umiPreIndexArr: [],
+      umiNextIndexArr: [],
     }
   },
   components: {
@@ -131,9 +144,13 @@ export default {
     change (current, pre, boxID, svgType) {
       this[boxID + 'Value'] = current // select option 当前的值
       let currentSample = this.sample[current]
+
+      this[boxID + 'IndexArr'] = [currentSample.groupName,currentSample.sampleList, boxID, svgType]
+
       this.$nextTick(() => {  //  DOM 都加载后 调用画图
         let hassvg = d3.selectAll('#'+ currentSample.groupName + boxID + svgType + 'svg')._groups[0].length
         if (hassvg) { // 如果该图之前存在就不再重新渲染了
+          // d3.selectAll('#'+ currentSample.groupName + boxID + svgType + 'svg').remove()
           return
         }
         if (!this.data[currentSample.groupName]){ // 如果 this.data 不存在这个样本的数据就发送请求
@@ -160,9 +177,14 @@ export default {
       })
     },
     initGene (sampleName, sampleList, boxID, svgType) {
+      // let hassvg = d3.selectAll('#'+ sampleName + boxID + svgType + 'svg')._groups[0].length
+      // if (hassvg) { // 如果该图之前存在就不再重新渲染了
+      //   d3.selectAll('#' + sampleName + boxID + svgType + 'svg').remove()
+      //   // return
+      // }
       let self = this
-      let svgWidth = 600, svgHeight = 500
-      let width = 600, height = 500 // 每个 g 标签的宽度/高度
+      let svgWidth = this.width, svgHeight = this.height
+      let width = this.width, height = this.height // 每个 g 标签的宽度/高度
       let padding = {top:30,right:60,bottom:60,left:80}
       let violinsvg = d3.select("#" + sampleName + boxID).append("svg").attr("width", svgWidth).attr("height", svgHeight).attr("id", sampleName + boxID + svgType + 'svg')
       let colorScale = d3.scaleOrdinal(d3.schemeCategory10)
@@ -265,7 +287,7 @@ export default {
             .append("circle")
             .attr("cx", (d,i) => xLinear(randomData[i]))
             .attr("cy", (d, i) => y(d[svgType]))
-            .attr("r", 1.5)
+            .attr("r", this.radius)
             .attr("fill", "black")
             .style("opacity", 0.2)
             .on('mouseover', function (d, i) {
@@ -286,7 +308,15 @@ export default {
           .attr("font-size", "16px")
 
     },
-
+    changeRadius () {
+      d3.selectAll("circle").attr("r", this.radius)
+    },
+    changeWidth () {
+      this.initGene(this.genePreIndexArr[0], this.genePreIndexArr[1], this.genePreIndexArr[2], this.genePreIndexArr[3])
+      this.initGene(this.geneNextIndexArr[0], this.geneNextIndexArr[1], this.geneNextIndexArr[2], this.geneNextIndexArr[3])
+      this.initGene(this.umiPreIndexArr[0], this.umiPreIndexArr[1], this.umiPreIndexArr[2], this.umiPreIndexArr[3])
+      this.initGene(this.umiNextIndexArr[0], this.umiNextIndexArr[1], this.umiNextIndexArr[2], this.umiNextIndexArr[3])
+    },
   }
 }
 </script>
